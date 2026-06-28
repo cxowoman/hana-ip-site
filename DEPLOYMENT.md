@@ -8,7 +8,7 @@
 
 - Web Service: `Starter`
 - Persistent Disk: `1 GB`
-- 依 Render 2026-06-29 官方價格，Starter Web Service 約 USD 10/月，Persistent Disk 約 USD 0.25/GB/月；本網站約 USD 10.25/月起，不含稅金、匯率或平台後續調整。
+- 依 Render 2026-06-29 官方價格，Starter Web Service 約 USD 7/月，Persistent Disk 約 USD 0.25/GB/月；本網站約 USD 7.25/月起，不含稅金、匯率或平台後續調整。
 
 1. 將整個 `ip-banner-2` 資料夾建立成 GitHub repo。
 2. 到 Render 建立新的 Blueprint 或 Web Service，連接該 GitHub repo。
