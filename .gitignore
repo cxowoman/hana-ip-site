@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.hana-admin-secret
+/published-data.js
+/published-data.json
+backups/
+work/
+data/

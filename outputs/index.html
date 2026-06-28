@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>涵捺｜個人 IP 形象網站</title>
+    <meta
+      name="description"
+      content="涵捺個人 IP 形象網站，展示實體課程、線上講座、陪跑服務與免費諮詢。"
+    />
+    <link rel="stylesheet" href="./styles.css?v=36" />
+    <script src="./config.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <button class="nav-toggle" type="button" aria-label="開啟選單" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav" aria-label="主選單">
+        <a href="#about" data-edit="nav.about" data-label="選單：認識涵捺">認識涵捺 Hana</a>
+        <a href="#offline" data-edit="nav.offline" data-label="選單：實體課程">實體課程</a>
+        <a href="#online" data-edit="nav.online" data-label="選單：線上講座">線上講座</a>
+        <a href="#share" data-edit="nav.share" data-label="選單：內容分享">內容分享</a>
+        <a href="#experience" data-edit="nav.experience" data-label="選單：相關經歷">相關經歷</a>
+        <a href="#monthly" data-edit="nav.monthly" data-label="選單：每月陪跑">每月陪跑</a>
+        <a href="#deep" data-edit="nav.deep" data-label="選單：深度陪跑">深度陪跑</a>
+        <a class="nav-cta" href="#consult" data-edit="nav.consult" data-label="選單：免費諮詢">免費諮詢</a>
+      </nav>
+    </header>
+
+    <main id="home">
+      <section class="hero home-section" aria-label="首頁 Banner">
+        <div class="hero-media">
+          <img
+            src="./assets/home-banner-hana.png"
+            alt="涵捺個人品牌首頁主視覺"
+            data-edit-image="hero.image"
+            data-label="首頁 Banner 圖片"
+          />
+        </div>
+        <div class="hero-copy">
+          <p class="eyebrow" data-edit="hero.eyebrow" data-label="首頁小標">Personal Brand Studio</p>
+          <h1 data-edit="hero.title" data-label="首頁主標">把你的專業，長成能被看見、被信任、被選擇的個人 IP。</h1>
+          <p data-edit="hero.body" data-label="首頁說明">
+            陪伴女性創作者、講師與服務型創業者，梳理定位、內容、課程與成交路徑，讓個人品牌不只是漂亮，而是能穩定推進事業。
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#consult" data-edit="hero.primaryCta" data-edit-link="hero.primaryLink" data-label="首頁主按鈕">預約免費諮詢</a>
+            <a class="button ghost" href="#offline" data-edit="hero.secondaryCta" data-edit-link="hero.secondaryLink" data-label="首頁次按鈕">查看課程</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section about-section page-section">
+        <div class="about-hero">
+          <div>
+            <p class="eyebrow" data-edit="about.eyebrow" data-label="認識涵捺小標">About Hana</p>
+            <h2 data-edit="about.title" data-label="認識涵捺標題">認識涵捺 Hana</h2>
+            <p class="lead" data-edit="about.body" data-label="認識涵捺價值主張">
+              協助電商賣家與專業服務者打造可複製的營收成長系統，從品牌定位、選品定價、廣告 ROI 到社群變現，降低試錯成本，走向穩定收入。
+            </p>
+          </div>
+          <div class="about-visual">
+            <img
+              src="./assets/hana-portrait-front.jpeg"
+              alt="涵捺 Hana 形象照"
+              data-edit-image="about.image"
+              data-label="認識涵捺形象照"
+            />
+            <div class="about-badges">
+              <span data-edit="about.badge1" data-label="認識涵捺亮點 1">20 年創業經歷</span>
+              <span data-edit="about.badge2" data-label="認識涵捺亮點 2">10+ 年電商實戰</span>
+              <span data-edit="about.badge3" data-label="認識涵捺亮點 3">蝦皮官方認證講師</span>
+              <span data-edit="about.badge4" data-label="認識涵捺亮點 4">個人品牌商品變現導師</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-specialties">
+          <div class="section-heading compact-heading">
+            <p class="eyebrow" data-edit="about.specialtyEyebrow" data-label="核心專業小標">Core Expertise</p>
+            <h3 data-edit="about.specialtyTitle" data-label="核心專業標題">核心專業領域</h3>
+            <p data-edit="about.specialtyIntro" data-label="核心專業說明">專注於四大維度，全方位提升品牌競爭力。</p>
+          </div>
+          <div class="expertise-grid">
+            <article>
+              <span>01</span>
+              <h4 data-edit="about.expertise1.title" data-label="專業 1 標題">電商與品牌經營</h4>
+              <p data-edit="about.expertise1.body" data-label="專業 1 內文">
+                從 <mark>品牌定位</mark>、產品線規劃、價格策略到 <mark>銷售漏斗</mark>，協助你把「賣產品」升級成「經營品牌資產」，讓流量、內容與成交有清楚路徑。
+              </p>
+              <ul>
+                <li data-edit="about.expertise1.point1" data-label="專業 1 重點 A">品牌定位策略</li>
+                <li data-edit="about.expertise1.point2" data-label="專業 1 重點 B">商品線規劃</li>
+                <li data-edit="about.expertise1.point3" data-label="專業 1 重點 C">轉換率優化</li>
+              </ul>
+            </article>
+            <article>
+              <span>02</span>
+              <h4 data-edit="about.expertise2.title" data-label="專業 2 標題">蝦皮賣場實戰</h4>
+              <p data-edit="about.expertise2.body" data-label="專業 2 內文">
+                以官方認證講師的實戰方法，拆解 <mark>後台數據</mark>、關鍵字廣告、商品頁優化與活動節奏，讓廣告預算不只是曝光，而能帶動 <mark>ROI</mark>、客單價與穩定成交。
+              </p>
+              <ul>
+                <li data-edit="about.expertise2.point1" data-label="專業 2 重點 A">關鍵字廣告布局</li>
+                <li data-edit="about.expertise2.point2" data-label="專業 2 重點 B">商品頁優化</li>
+                <li data-edit="about.expertise2.point3" data-label="專業 2 重點 C">後台數據解析</li>
+              </ul>
+            </article>
+            <article>
+              <span>03</span>
+              <h4 data-edit="about.expertise3.title" data-label="專業 3 標題">商品變現設計</h4>
+              <p data-edit="about.expertise3.body" data-label="專業 3 內文">
+                不只是做出商品，而是設計 <mark>可被理解、可被購買、可被續購</mark> 的方案。從低門檻入口到高價服務，建立高毛利結構與可複製收入模型。
+              </p>
+              <ul>
+                <li data-edit="about.expertise3.point1" data-label="專業 3 重點 A">可複製方案設計</li>
+                <li data-edit="about.expertise3.point2" data-label="專業 3 重點 B">獲利結構優化</li>
+                <li data-edit="about.expertise3.point3" data-label="專業 3 重點 C">續購模型規劃</li>
+              </ul>
+            </article>
+            <article>
+              <span>04</span>
+              <h4 data-edit="about.expertise4.title" data-label="專業 4 標題">社群變現與斜槓</h4>
+              <p data-edit="about.expertise4.body" data-label="專業 4 內文">
+                整合社群平台、內容主題與私域工具，打造從 <mark>被看見</mark>、被信任到 <mark>願意購買</mark> 的流量閉環，讓斜槓不只是曝光，而是能穩定創造收入。
+              </p>
+              <ul>
+                <li data-edit="about.expertise4.point1" data-label="專業 4 重點 A">內容漏斗策略</li>
+                <li data-edit="about.expertise4.point2" data-label="專業 4 重點 B">多元收入佈局</li>
+                <li data-edit="about.expertise4.point3" data-label="專業 4 重點 C">私域名單經營</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div class="about-story">
+          <div>
+            <p class="eyebrow" data-edit="about.storyEyebrow" data-label="關於我小標">About Me</p>
+            <h3 data-edit="about.storyTitle" data-label="關於我標題">把營收成長做成可以追蹤、可以複製的系統。</h3>
+          </div>
+          <div class="about-story__body">
+            <p data-edit="about.story1" data-label="關於我段落 1">
+              我是涵捺 Hana，擁有 20 年創業經歷與 10 年以上電商事業實戰。目前專注於商業營收成長顧問與電商講師，擅長把賣不動、投放沒效、流量無法變現等問題，拆成可以執行的策略。
+            </p>
+            <p data-edit="about.story2" data-label="關於我段落 2">
+              我的培訓與陪跑涵蓋蝦皮廣告、後台數據解讀、社群漏斗整合、商品變現方案設計與品牌經營布局，也透過實體交流讓學員建立同儕支持與資源連結。
+            </p>
+            <p data-edit="about.story3" data-label="關於我段落 3">
+              我相信突破不是靠運氣，而是一次次做對選擇。若你正在面對營收瓶頸，或想建立穩定斜槓收入，我會陪你用數據、流程與行動節奏，把成長做成系統。
+            </p>
+            <a class="button primary" href="#consult" data-edit="about.cta" data-label="認識涵捺按鈕">預約免費諮詢</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="offline" class="section course-band home-section page-section">
+        <div class="section-heading">
+          <p class="eyebrow" data-edit="offline.eyebrow" data-label="實體課程小標">In-Person Programs</p>
+          <h2 data-edit="offline.title" data-label="實體課程標題">實體課程</h2>
+        </div>
+        <div class="event-showcase" id="offlineCourseList">
+          <div class="empty-state course-empty">目前尚未上架實體課程。</div>
+        </div>
+      </section>
+
+      <section id="course-detail" class="section course-detail-section page-section">
+        <a class="back-link" href="#offline">← 回活動列表</a>
+        <div class="course-detail-host" id="courseDetail"></div>
+      </section>
+
+      <section id="online" class="section online-section home-section page-section">
+        <div class="section-heading">
+          <p class="eyebrow" data-edit="online.eyebrow" data-label="線上講座小標">Online Lectures</p>
+          <h2 data-edit="online.title" data-label="線上講座標題">線上講座</h2>
+        </div>
+        <div class="lecture-list" id="onlineCourseList">
+          <div class="empty-state course-empty">目前尚未上架線上課程。</div>
+        </div>
+      </section>
+
+      <section id="online-course-detail" class="section online-detail-section page-section">
+        <a class="back-link" href="#online">← 回線上講座</a>
+        <div class="course-detail-host online-detail-layout" id="onlineCourseDetail"></div>
+      </section>
+
+      <section id="share" class="section share-section page-section">
+        <div class="section-heading">
+          <p class="eyebrow" data-edit="share.eyebrow" data-label="內容分享小標">Content Library</p>
+          <h2 data-edit="share.title" data-label="內容分享標題">內容分享</h2>
+          <p data-edit="share.intro" data-label="內容分享說明">
+            把直播、課程與陪跑中的重點整理成可閱讀、可收藏、可分享的文章內容。
+          </p>
+        </div>
+        <div class="share-grid" id="contentShareList">
+          <div class="empty-state course-empty">目前尚未新增內容分享。</div>
+        </div>
+      </section>
+
+      <section id="share-detail" class="section share-detail-section page-section">
+        <a class="back-link" href="#share">← 回內容分享</a>
+        <div class="share-detail-host" id="contentShareDetail"></div>
+      </section>
+
+      <section id="experience" class="section experience-section page-section">
+        <div class="experience-hero">
+          <p class="eyebrow" data-edit="experience.eyebrow" data-label="相關經歷小標">Experience & Achievements</p>
+          <h2 data-edit="experience.title" data-label="相關經歷標題">相關經歷與成功案例</h2>
+          <p class="lead" data-edit="experience.subtitle" data-label="相關經歷副標">創業培訓｜電商營運｜品牌顧問</p>
+          <div class="achievement-strip">
+            <span data-edit="experience.metric1" data-label="經歷數字 1">超過 20 年創業歷程</span>
+            <span data-edit="experience.metric2" data-label="經歷數字 2">4 個線上事業</span>
+            <span data-edit="experience.metric3" data-label="經歷數字 3">1000+ 創業學員</span>
+            <span data-edit="experience.metric4" data-label="經歷數字 4">個人品牌商品變現導師</span>
+          </div>
+        </div>
+
+        <div class="credential-grid" id="experienceCredentialGrid">
+          <div class="empty-state course-empty">目前尚未新增相關經歷。</div>
+        </div>
+
+        <div class="case-section">
+          <div class="section-heading compact-heading">
+            <p class="eyebrow" data-edit="experience.caseEyebrow" data-label="案例小標">Success Cases</p>
+            <h3 data-edit="experience.caseTitle" data-label="案例標題">學員與品牌成長案例</h3>
+          </div>
+          <div class="case-grid" id="testimonialGrid">
+            <div class="empty-state course-empty">目前尚未新增見證案例。</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section coaching-section home-section page-section">
+        <div class="section-heading">
+          <p class="eyebrow" data-edit="coaching.eyebrow" data-label="陪跑小標">Coaching</p>
+          <h2 data-edit="coaching.title" data-label="陪跑標題">陪跑方案</h2>
+          <p data-edit="coaching.intro" data-label="陪跑說明">依照你目前的品牌階段，選擇適合的陪跑節奏。</p>
+        </div>
+        <div class="coaching-grid" id="coachingOverviewList">
+          <div class="empty-state course-empty">目前尚未上架陪跑方案。</div>
+        </div>
+      </section>
+
+      <section id="monthly" class="section coaching-page page-section">
+        <div class="section-heading">
+          <p class="eyebrow" data-edit="monthly.pageEyebrow" data-label="每月陪跑小標">Monthly Coaching</p>
+          <h2 data-edit="monthly.pageTitle" data-label="每月陪跑頁標題">每月陪跑</h2>
+          <p data-edit="monthly.pageIntro" data-label="每月陪跑頁說明">適合需要穩定校準方向、每月拆解行動與持續推進的人。</p>
+        </div>
+        <div class="coaching-offer-list" id="monthlyCoachingList">
+          <div class="empty-state course-empty">目前尚未上架每月陪跑方案。</div>
+        </div>
+      </section>
+
+      <section id="deep" class="section coaching-page deep-page page-section">
+        <div class="section-heading">
+          <p class="eyebrow" data-edit="deep.pageEyebrow" data-label="深度陪跑小標">Deep Coaching</p>
+          <h2 data-edit="deep.pageTitle" data-label="深度陪跑頁標題">深度陪跑</h2>
+          <p data-edit="deep.pageIntro" data-label="深度陪跑頁說明">適合正在轉型、重整品牌定位，或想放大課程與營收系統的人。</p>
+        </div>
+        <div class="coaching-offer-list" id="deepCoachingList">
+          <div class="empty-state course-empty">目前尚未上架深度陪跑方案。</div>
+        </div>
+      </section>
+
+      <section id="consult" class="consult-section page-section">
+        <div>
+          <p class="eyebrow" data-edit="consult.eyebrow" data-label="免費諮詢小標">Free Consultation</p>
+          <h2 data-edit="consult.title" data-label="免費諮詢標題">先聊聊你的品牌現在卡在哪裡。</h2>
+          <p data-edit="consult.body" data-label="免費諮詢內文">留下你的需求，我們會一起判斷最適合的下一步：課程、講座、陪跑，或先整理你的定位。</p>
+        </div>
+        <a
+          class="button primary"
+          href="mailto:hello@example.com?subject=我想預約涵捺免費諮詢"
+          data-edit="consult.cta"
+          data-edit-link="consult.link"
+          data-label="免費諮詢按鈕"
+        >預約免費諮詢</a>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <p data-edit="footer.copyright" data-label="頁尾版權">© 2026 Hannah Personal Brand Studio</p>
+      <div class="footer-links">
+        <a href="./admin.html">網站後台</a>
+        <a href="#home" data-edit="footer.backTop" data-label="頁尾回首頁">回到首頁</a>
+      </div>
+    </footer>
+
+    <script src="./content-posts.js?v=7"></script>
+    <script src="./recovered-data.js?v=2"></script>
+    <script src="./published-data.js?v=3"></script>
+    <script src="./script.js?v=49"></script>
+  </body>
+</html>

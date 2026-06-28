@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>涵捺 Hana｜網站後台</title>
+    <link rel="stylesheet" href="./admin.css?v=10" />
+    <script src="./config.js"></script>
+  </head>
+  <body>
+    <main class="admin-app">
+      <section class="login-view" id="loginView">
+        <form class="login-card" id="adminLoginForm" autocomplete="off">
+          <p class="eyebrow">Hana Admin</p>
+          <h1>網站管理後台</h1>
+          <p>登入後可以修改前台內容、上架課程、查看報名資料。</p>
+          <label>
+            帳號
+            <input name="username" required autocomplete="username" />
+          </label>
+          <label>
+            密碼
+            <input name="password" type="password" required autocomplete="current-password" />
+          </label>
+          <div class="form-actions">
+            <p class="login-status" role="status"></p>
+            <button type="submit">登入</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="dashboard is-hidden" id="dashboardView">
+        <aside class="sidebar">
+          <div>
+            <p class="eyebrow">Hana Admin</p>
+            <h1>網站後台</h1>
+          </div>
+          <nav class="admin-tabs" aria-label="後台功能">
+            <button class="is-active" type="button" data-panel="contentPanel">網站內容</button>
+            <button type="button" data-panel="coursePanel">課程管理</button>
+            <button type="button" data-panel="contentSharePanel">內容分享</button>
+            <button type="button" data-panel="coachingPanel">陪跑管理</button>
+            <button type="button" data-panel="experiencePanel">經歷管理</button>
+            <button type="button" data-panel="testimonialPanel">見證管理</button>
+            <button type="button" data-panel="registrationPanel">報名名單</button>
+            <button type="button" data-panel="systemPanel">系統設定</button>
+          </nav>
+          <div class="sidebar-actions">
+            <a href="./index.html#home">查看前台</a>
+            <button type="button" id="adminLogoutButton">登出</button>
+          </div>
+        </aside>
+
+        <section class="panel-stack">
+          <section class="panel is-active" id="contentPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Content Editor</p>
+                <h2>網站內容</h2>
+              </div>
+              <button type="button" class="secondary" id="resetContentButton">還原文字</button>
+            </div>
+            <div class="content-layout">
+              <nav class="section-tabs" id="contentSectionTabs"></nav>
+              <form class="editor-form" id="contentForm"></form>
+            </div>
+          </section>
+
+          <section class="panel" id="coursePanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Courses</p>
+                <h2>課程管理</h2>
+              </div>
+              <button type="button" class="secondary" id="newCourseButton">新增課程</button>
+            </div>
+            <div class="course-layout">
+              <div class="course-list" id="adminCourseList"></div>
+              <form class="editor-form course-form" id="adminCourseForm">
+                <input type="hidden" name="id" />
+                <div class="form-grid">
+                  <label>課程類型<select name="type" required><option value="offline">實體課程</option><option value="online">線上課程</option></select></label>
+                  <label>狀態<select name="status" required><option value="published">已上架</option><option value="draft">草稿</option></select></label>
+                  <label>講師名稱<input name="teacherName" required /></label>
+                  <label>聯絡 Email<input name="teacherEmail" type="email" /></label>
+                  <label class="wide">課程名稱<input name="title" required /></label>
+                  <label>活動日期<input name="date" type="date" required /></label>
+                  <label>開始時間<input name="startTime" type="time" required /></label>
+                  <label>結束時間<input name="endTime" type="time" required /></label>
+                  <label>地點或線上連結<input name="location" required /></label>
+                  <label>名額<input name="capacity" type="number" min="1" /></label>
+                  <label>費用<input name="price" /></label>
+                  <label>分類<input name="category" /></label>
+                  <label class="wide">課程文案<textarea name="description" rows="6" required></textarea></label>
+                  <label class="wide">注意事項<textarea name="notes" rows="4"></textarea></label>
+                  <label class="wide upload-box">
+                    課程圖片
+                    <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <span>可上傳 JPG、PNG 或 WebP。未上傳時會保留原圖片。</span>
+                    <input name="image" placeholder="或貼上圖片網址" />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <p class="course-status" role="status"></p>
+                  <button type="button" class="danger" id="deleteCourseButton">刪除課程</button>
+                  <button type="submit">儲存課程</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel" id="contentSharePanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Content Library</p>
+                <h2>內容分享</h2>
+              </div>
+              <button type="button" class="secondary" id="newContentPostButton">新增內容</button>
+            </div>
+            <div class="content-share-admin-layout">
+              <div class="content-share-admin-list" id="adminContentShareList"></div>
+              <form class="editor-form content-share-form" id="adminContentShareForm">
+                <input type="hidden" name="id" />
+                <div class="form-grid">
+                  <label>狀態<select name="status" required><option value="published">已上架</option><option value="draft">草稿</option></select></label>
+                  <label>發布日期<input name="publishedAt" type="date" /></label>
+                  <label class="wide">文章分類<input name="category" placeholder="例如：直播精華、課程筆記、變現策略" /></label>
+                  <label class="wide">大標題<input name="title" required placeholder="例如：直播後如何整理成能成交的內容？" /></label>
+                  <label class="wide">副標題<textarea name="subtitle" rows="3" required placeholder="用 1 到 2 句話說清楚這篇內容能幫粉絲解決什麼問題。"></textarea></label>
+                  <label class="wide upload-box">
+                    封面圖片
+                    <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <span>建議上傳橫式圖片。系統會自動裁成 16:9，讓文章列表看起來一致。</span>
+                    <input name="image" placeholder="或貼上圖片網址" />
+                  </label>
+                  <div class="wide rich-editor-field">
+                    <span>文章內容</span>
+                    <div class="rich-editor">
+                      <div class="rich-toolbar" aria-label="文章編輯工具">
+                        <button type="button" data-rich-command="bold">粗體</button>
+                        <button type="button" data-rich-command="formatBlock" data-rich-value="h3">小標題</button>
+                        <button type="button" data-rich-command="insertUnorderedList">清單</button>
+                        <button type="button" data-rich-command="createLink">連結</button>
+                      </div>
+                      <div class="rich-editor-area" id="contentPostBodyEditor" contenteditable="true" role="textbox" aria-multiline="true"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <p class="content-share-status" role="status"></p>
+                  <button type="button" class="danger" id="deleteContentPostButton">刪除內容</button>
+                  <button type="submit">儲存內容</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel" id="coachingPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Coaching Offers</p>
+                <h2>陪跑管理</h2>
+              </div>
+              <button type="button" class="secondary" id="newCoachingButton">新增陪跑</button>
+            </div>
+            <div class="coaching-admin-layout">
+              <div class="coaching-admin-list" id="adminCoachingList"></div>
+              <form class="editor-form coaching-form" id="adminCoachingForm">
+                <input type="hidden" name="id" />
+                <div class="form-grid">
+                  <label>陪跑類型<select name="type" required><option value="monthly">每月陪跑</option><option value="deep">深度陪跑</option></select></label>
+                  <label>狀態<select name="status" required><option value="published">已上架</option><option value="draft">草稿</option></select></label>
+                  <label>分類標籤<input name="tag" placeholder="例如：每月陪跑" /></label>
+                  <label>費用<input name="price" placeholder="例如：NT$ 8,000 / 月" /></label>
+                  <label class="wide">方案標題<input name="title" required placeholder="例如：穩定前進的品牌節奏" /></label>
+                  <label class="wide">方案說明<textarea name="description" rows="5" required placeholder="說明適合對象、陪跑內容與可帶走成果。"></textarea></label>
+                  <label>陪跑週期<input name="duration" placeholder="例如：每月 1 次策略會議" /></label>
+                  <label>按鈕文字<input name="ctaText" placeholder="例如：預約陪跑諮詢" /></label>
+                  <label class="wide">按鈕連結<input name="ctaLink" placeholder="#consult 或 mailto:..." /></label>
+                  <label class="wide upload-box">
+                    陪跑圖片
+                    <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <span>可上傳 JPG、PNG 或 WebP。未上傳時會保留原圖片。</span>
+                    <input name="image" placeholder="或貼上圖片網址" />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <p class="coaching-status" role="status"></p>
+                  <button type="button" class="danger" id="deleteCoachingButton">刪除陪跑</button>
+                  <button type="submit">儲存陪跑</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel" id="experiencePanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Experience Items</p>
+                <h2>經歷管理</h2>
+              </div>
+              <button type="button" class="secondary" id="newExperienceButton">新增經歷</button>
+            </div>
+            <div class="experience-admin-layout">
+              <div class="experience-admin-list" id="adminExperienceList"></div>
+              <form class="editor-form experience-form" id="adminExperienceForm">
+                <input type="hidden" name="id" />
+                <div class="form-grid">
+                  <label>狀態<select name="status" required><option value="published">已上架</option><option value="draft">草稿</option></select></label>
+                  <label>分類標籤<input name="tag" placeholder="例如：榮譽獎項｜2024 年度" /></label>
+                  <label class="wide">經歷標題<input name="title" required placeholder="例如：榮獲 2024 蝦皮官方金牌講師" /></label>
+                  <label class="wide">經歷內文<textarea name="body" rows="5" required placeholder="描述這段經歷、邀約、獎項或合作成果。"></textarea></label>
+                  <label class="wide upload-box">
+                    經歷圖片
+                    <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <span>建議上傳橫式圖片。系統會自動裁成 16:9 顯示。</span>
+                    <input name="image" placeholder="或貼上圖片網址" />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <p class="experience-status" role="status"></p>
+                  <button type="button" class="danger" id="deleteExperienceButton">刪除經歷</button>
+                  <button type="submit">儲存經歷</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel" id="testimonialPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Testimonials</p>
+                <h2>見證管理</h2>
+              </div>
+              <button type="button" class="secondary" id="newTestimonialButton">新增見證</button>
+            </div>
+            <div class="testimonial-layout">
+              <div class="testimonial-list" id="adminTestimonialList"></div>
+              <form class="editor-form testimonial-form" id="adminTestimonialForm">
+                <input type="hidden" name="id" />
+                <div class="form-grid">
+                  <label>狀態<select name="status" required><option value="published">已上架</option><option value="draft">草稿</option></select></label>
+                  <label>分類標籤<input name="tag" placeholder="例如：品牌營運｜10x Growth" /></label>
+                  <label class="wide">見證標題<input name="title" required placeholder="例如：晶鉐水晶坊｜十倍營收成長" /></label>
+                  <label class="wide">見證內文<textarea name="body" rows="5" required placeholder="描述學員或品牌的成長成果。"></textarea></label>
+                  <label class="wide upload-box">
+                    見證圖片
+                    <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <span>建議上傳橫式圖片。系統會自動裁成 16:9 顯示。</span>
+                    <input name="image" placeholder="或貼上圖片網址" />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <p class="testimonial-status" role="status"></p>
+                  <button type="button" class="danger" id="deleteTestimonialButton">刪除見證</button>
+                  <button type="submit">儲存見證</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel" id="registrationPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Registrations</p>
+                <h2>報名名單</h2>
+              </div>
+              <button type="button" class="secondary" id="exportRegistrationsButton">匯出 CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>姓名</th>
+                    <th>Email</th>
+                    <th>手機</th>
+                    <th>備註</th>
+                    <th>時間</th>
+                  </tr>
+                </thead>
+                <tbody id="registrationRows"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="emptyRegistrations">目前尚無報名資料。</div>
+          </section>
+
+          <section class="panel" id="systemPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">System</p>
+                <h2>系統設定</h2>
+              </div>
+            </div>
+            <div class="system-grid">
+              <article>
+                <h3>目前資料模式</h3>
+                <p id="storageModeText">本機瀏覽器儲存。之後填入 Supabase 後可以升級成雲端同步。</p>
+              </article>
+              <article>
+                <h3>資料備份</h3>
+                <p>可匯出目前內容與課程資料，作為備份或搬移到其他電腦。</p>
+                <button type="button" class="secondary" id="exportBackupButton">匯出 JSON</button>
+              </article>
+              <article>
+                <h3>還原資料</h3>
+                <p>匯入先前匯出的 JSON，會覆蓋目前本機資料。</p>
+                <input type="file" id="importBackupInput" accept="application/json" />
+              </article>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="./content-posts.js?v=7"></script>
+    <script src="./recovered-data.js?v=2"></script>
+    <script src="./published-data.js?v=3"></script>
+    <script src="./admin.js?v=31"></script>
+  </body>
+</html>

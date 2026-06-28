@@ -1,0 +1,548 @@
+:root {
+  --ink: #24302a;
+  --muted: #6f7a73;
+  --panel: #fff;
+  --paper: #fbfaf6;
+  --line: #d9dfd6;
+  --green: #003e3e;
+  --wine: #5e2531;
+  --gold: #b69256;
+  --shadow: 0 16px 46px rgba(36, 54, 42, 0.08);
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+button.secondary,
+.sidebar-actions a {
+  border: 1px solid rgba(0, 62, 62, 0.24);
+  background: #fff;
+  color: var(--green);
+}
+
+button.danger {
+  background: #fff1ef;
+  color: #a13d36;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--gold);
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.is-active {
+  display: block;
+}
+
+.login-view {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card,
+.panel,
+.sidebar,
+.system-grid article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.login-card {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: clamp(24px, 5vw, 42px);
+}
+
+.login-card h1,
+.sidebar h1,
+.panel-heading h2 {
+  margin: 0;
+  font-family: "Noto Serif TC", "Songti TC", Georgia, serif;
+}
+
+.login-card p:not(.eyebrow),
+.system-grid p,
+.form-actions p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 13px;
+  background: #fff;
+  color: var(--ink);
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0, 62, 62, 0.1);
+  outline: 0;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.form-actions p {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+}
+
+.dashboard {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 22px;
+  padding: 22px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 22px;
+  height: calc(100svh - 44px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px;
+}
+
+.admin-tabs,
+.sidebar-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-tabs button {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+}
+
+.admin-tabs button.is-active {
+  background: var(--green);
+  color: #fff;
+}
+
+.sidebar-actions a {
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.panel {
+  min-height: calc(100svh - 44px);
+  padding: clamp(22px, 4vw, 36px);
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.content-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 22px;
+}
+
+.section-tabs {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.section-tabs button {
+  background: #fff;
+  color: var(--green);
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.section-tabs button.is-active {
+  background: var(--green);
+  color: #fff;
+}
+
+.editor-form {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  background: #fff;
+}
+
+.form-grid,
+.course-layout,
+.content-share-admin-layout,
+.coaching-admin-layout,
+.testimonial-layout,
+.system-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.upload-box {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #fcfbf6;
+}
+
+.upload-box span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.course-layout,
+.content-share-admin-layout,
+.coaching-admin-layout,
+.experience-admin-layout,
+.testimonial-layout {
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.course-list,
+.content-share-admin-list,
+.coaching-admin-list,
+.experience-admin-list,
+.testimonial-list {
+  display: grid;
+  gap: 10px;
+}
+
+.course-list button,
+.content-share-admin-list button,
+.coaching-admin-list button,
+.experience-admin-list button,
+.testimonial-list button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+}
+
+.testimonial-list button {
+  position: relative;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  user-select: none;
+}
+
+.course-list button,
+.content-share-admin-list button {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.course-list-copy,
+.content-share-list-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.inline-delete {
+  align-self: center;
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: #fff1ef;
+  color: #a13d36;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.inline-delete:hover {
+  background: #ffdeda;
+}
+
+.testimonial-list-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.drag-grip {
+  width: 14px;
+  height: 24px;
+  border-radius: 8px;
+  background-image: radial-gradient(circle, rgba(0, 62, 62, 0.46) 1.8px, transparent 2px);
+  background-size: 7px 7px;
+  background-position: 0 1px;
+  cursor: grab;
+  opacity: 0.7;
+}
+
+.testimonial-list button:hover .drag-grip,
+.testimonial-list button.is-active .drag-grip {
+  opacity: 1;
+}
+
+.testimonial-list button.is-dragging {
+  opacity: 0.42;
+  transform: scale(0.99);
+}
+
+.testimonial-list button.is-drop-before::before,
+.testimonial-list button.is-drop-after::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 8px 20px rgba(182, 146, 86, 0.24);
+}
+
+.testimonial-list button.is-drop-before::before {
+  top: -7px;
+}
+
+.testimonial-list button.is-drop-after::after {
+  bottom: -7px;
+}
+
+.course-list button.is-active,
+.content-share-admin-list button.is-active,
+.coaching-admin-list button.is-active,
+.experience-admin-list button.is-active,
+.testimonial-list button.is-active {
+  border-color: var(--green);
+  background: #f0f6f2;
+}
+
+.course-list small,
+.content-share-admin-list small,
+.coaching-admin-list small,
+.experience-admin-list small,
+.testimonial-list small {
+  color: var(--muted);
+}
+
+.rich-editor-field {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.rich-editor {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.rich-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px;
+  background: #fcfbf6;
+}
+
+.rich-toolbar button {
+  border: 1px solid rgba(0, 62, 62, 0.18);
+  background: #fff;
+  color: var(--green);
+  padding: 9px 12px;
+}
+
+.rich-editor-area {
+  min-height: 280px;
+  padding: 18px;
+  color: var(--ink);
+  font-weight: 500;
+  line-height: 1.85;
+  outline: 0;
+}
+
+.rich-editor-area:empty::before {
+  content: "請輸入文章內容，可以整理直播重點、課程筆記、方法步驟或案例故事。";
+  color: var(--muted);
+}
+
+.rich-editor-area h3 {
+  margin: 20px 0 10px;
+  color: var(--wine);
+  font-size: 24px;
+}
+
+.rich-editor-area p,
+.rich-editor-area ul,
+.rich-editor-area ol {
+  margin-bottom: 16px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty-state {
+  display: none;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 28px;
+  color: var(--muted);
+  background: #fff;
+}
+
+.empty-state.is-visible {
+  display: block;
+}
+
+.system-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.system-grid article {
+  padding: 22px;
+}
+
+@media (max-width: 980px) {
+  .dashboard,
+  .content-layout,
+  .course-layout,
+  .content-share-admin-layout,
+  .coaching-admin-layout,
+  .experience-admin-layout,
+  .testimonial-layout,
+  .system-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .dashboard {
+    padding: 12px;
+  }
+
+  .panel,
+  .sidebar,
+  .editor-form {
+    padding: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
