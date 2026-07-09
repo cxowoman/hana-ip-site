@@ -635,7 +635,6 @@ const hydratePublishedDataOnce = () => {
   const data = window.HANA_PUBLISHED_DATA;
   if (!data || typeof data !== "object" || !data.version) return;
   try {
-    if (localStorage.getItem(PUBLISHED_VERSION_KEY) === data.version) return;
     if (data.content && typeof data.content === "object") {
       writePublishedJson(SITE_CONTENT_KEY, normalizeExperienceMetrics(data.content));
     }

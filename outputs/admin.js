@@ -721,7 +721,6 @@ const hydratePublishedDataOnce = () => {
   const data = window.HANA_PUBLISHED_DATA;
   if (!data || typeof data !== "object" || !data.version) return;
   try {
-    if (localStorage.getItem(PUBLISHED_VERSION_KEY) === data.version) return;
     if (data.content && typeof data.content === "object") writeContent(data.content);
     if (Array.isArray(data.courses)) writeCourses(data.courses);
     if (Array.isArray(data.deletedCourses)) writeDeletedCourseIds(new Set(data.deletedCourses));
