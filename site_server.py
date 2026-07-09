@@ -11,6 +11,8 @@ import json
 import os
 import secrets
 import shutil
+import subprocess
+import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -19,6 +21,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent
 OUTPUTS = ROOT / "outputs"
+DOCS = ROOT / "docs"
+BUILD_GITHUB_PAGES_SCRIPT = ROOT / "scripts" / "build_github_pages.py"
 DATA_DIR = Path(os.environ.get("HANA_DATA_DIR", str(ROOT))).expanduser().resolve()
 SECRET_FILE = DATA_DIR / ".hana-admin-secret"
 PUBLISHED_JS_FILE = DATA_DIR / "published-data.js"
@@ -30,6 +34,7 @@ SESSION_TTL = timedelta(days=7)
 MAX_BODY = 35 * 1024 * 1024
 ADMIN_USERNAME = os.environ.get("HANA_ADMIN_USER", "hana31923")
 ADMIN_PASSWORD = os.environ.get("HANA_ADMIN_PASSWORD", "vanness00")
+AUTO_GIT_PUBLISH = os.environ.get("HANA_AUTO_GIT_PUBLISH", "1").lower() not in {"0", "false", "no"}
 
 
 def json_response(handler: http.server.BaseHTTPRequestHandler, status: int, payload: dict[str, Any]) -> None:
@@ -102,19 +107,91 @@ def safe_payload(data: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
-def write_published_data(data: dict[str, Any]) -> dict[str, Any]:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    cleaned = safe_payload(data)
+def published_text(cleaned: dict[str, Any]) -> tuple[str, str]:
     js = "window.HANA_PUBLISHED_DATA = "
     js += json.dumps(cleaned, ensure_ascii=False, separators=(",", ":"))
     js += ";\n"
     json_text = json.dumps(cleaned, ensure_ascii=False, indent=2)
+    return js, json_text
+
+
+def atomic_write_text(target: Path, text: str) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{target.name}.", dir=str(target.parent))
+    with os.fdopen(fd, "w", encoding="utf-8") as tmp:
+        tmp.write(text)
+    os.replace(tmp_name, target)
+
+
+def write_published_files(target_dir: Path, cleaned: dict[str, Any]) -> None:
+    js, json_text = published_text(cleaned)
     for target, text in ((PUBLISHED_JS_FILE, js), (PUBLISHED_JSON_FILE, json_text)):
-        fd, tmp_name = tempfile.mkstemp(prefix=f".{target.name}.", dir=str(DATA_DIR))
-        with os.fdopen(fd, "w", encoding="utf-8") as tmp:
-            tmp.write(text)
-        os.replace(tmp_name, target)
-    return cleaned
+        atomic_write_text(target_dir / target.name, text)
+
+
+def run_command(command: list[str], timeout: int = 60) -> dict[str, Any]:
+    try:
+        result = subprocess.run(
+            command,
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+        return {
+            "ok": result.returncode == 0,
+            "code": result.returncode,
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+        }
+    except Exception as error:
+        return {"ok": False, "code": -1, "stdout": "", "stderr": str(error)}
+
+
+def build_github_pages() -> dict[str, Any]:
+    if not BUILD_GITHUB_PAGES_SCRIPT.exists():
+        return {"ok": False, "skipped": True, "reason": "missing_build_script"}
+    return run_command([sys.executable, str(BUILD_GITHUB_PAGES_SCRIPT)])
+
+
+def auto_publish_to_git() -> dict[str, Any]:
+    if not AUTO_GIT_PUBLISH:
+        return {"ok": True, "skipped": True, "reason": "disabled"}
+    remote = run_command(["git", "remote"])
+    if not remote["ok"]:
+        return {"ok": False, "skipped": True, "reason": "git_unavailable", "details": remote}
+    if not remote["stdout"].strip():
+        return {"ok": True, "skipped": True, "reason": "no_remote"}
+
+    tracked_paths = ["outputs/published-data.js", "outputs/published-data.json", "docs"]
+    status = run_command(["git", "status", "--porcelain", "--", *tracked_paths])
+    if not status["ok"]:
+        return {"ok": False, "skipped": True, "reason": "status_failed", "details": status}
+    if not status["stdout"].strip():
+        return {"ok": True, "skipped": True, "reason": "no_changes"}
+
+    add = run_command(["git", "add", *tracked_paths])
+    if not add["ok"]:
+        return {"ok": False, "stage": "add", "details": add}
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    commit = run_command(["git", "commit", "-m", f"Publish site content {timestamp}"])
+    if not commit["ok"] and "nothing to commit" not in (commit["stdout"] + commit["stderr"]).lower():
+        return {"ok": False, "stage": "commit", "details": commit}
+    push = run_command(["git", "push"], timeout=120)
+    if not push["ok"]:
+        return {"ok": False, "stage": "push", "details": push}
+    return {"ok": True, "skipped": False, "commit": commit["stdout"], "push": push["stdout"] or push["stderr"]}
+
+
+def write_published_data(data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    cleaned = safe_payload(data)
+    write_published_files(DATA_DIR, cleaned)
+    write_published_files(OUTPUTS, cleaned)
+    build_result = build_github_pages()
+    git_result = auto_publish_to_git()
+    return cleaned, build_result, git_result
 
 
 def seed_published_data() -> None:
@@ -216,8 +293,17 @@ class HanaSiteHandler(http.server.SimpleHTTPRequestHandler):
         if not data:
             json_response(self, 400, {"ok": False, "error": "invalid_payload"})
             return
-        published = write_published_data(data)
-        json_response(self, 200, {"ok": True, "version": published["version"]})
+        published, build_result, git_result = write_published_data(data)
+        json_response(
+            self,
+            200,
+            {
+                "ok": True,
+                "version": published["version"],
+                "staticBuild": build_result,
+                "gitPublish": git_result,
+            },
+        )
 
 
 def main() -> None:
