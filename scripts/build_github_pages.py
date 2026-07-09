@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import shutil
 import os
+import json
+import re
 from datetime import date
 from pathlib import Path
 
@@ -23,13 +25,23 @@ PUBLIC_EXCLUDES = {
 }
 
 
+def published_data_version() -> str:
+    try:
+        data = json.loads((OUTPUTS / "published-data.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return date.today().isoformat()
+    version = str(data.get("version") or date.today().isoformat())
+    return re.sub(r"[^0-9A-Za-z._-]+", "-", version).strip("-") or date.today().isoformat()
+
+
 def public_index_html(html: str) -> str:
     html = html.replace('        <a href="./admin.html">網站後台</a>\n', "")
     html = html.replace('    <script src="./config.js"></script>\n', "")
-    html = html.replace('<script src="./published-data.js?v=3"></script>', '<script src="./published-data.js"></script>')
-    html = html.replace('<script src="./script.js?v=49"></script>', '<script src="./script.js"></script>')
-    html = html.replace('<script src="./content-posts.js?v=7"></script>', '<script src="./content-posts.js"></script>')
-    html = html.replace('<script src="./recovered-data.js?v=2"></script>', '<script src="./recovered-data.js"></script>')
+    html = re.sub(
+        r'<script src="\./published-data\.js(?:\?v=[^"]*)?"></script>',
+        f'<script src="./published-data.js?v={published_data_version()}"></script>',
+        html,
+    )
     return html
 
 
