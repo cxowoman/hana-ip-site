@@ -27,9 +27,31 @@
 - Branch: `main`
 - Folder: `/docs`
 
-設定好後，網址通常會是：
+目前公開網址：
 
-`https://你的-github-帳號.github.io/hana-ip-site/`
+`https://cxowoman.github.io/hana-ip-site/`
+
+正式品牌網域預計使用：
+
+`https://hana31923.com.tw/`
+
+`scripts/build_github_pages.py` 每次建置都會在 `docs/CNAME` 寫入 `hana31923.com.tw`，避免後台儲存後覆蓋正式網域設定。
+
+## 自訂網域 DNS
+
+`hana31923.com.tw` 目前名稱伺服器在 Cloudflare，因此 DNS 紀錄要到 Cloudflare 修改，不是在 GoDaddy 修改。
+
+Cloudflare DNS 需要設定：
+
+| 類型 | 名稱 | 內容 |
+| --- | --- | --- |
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| CNAME | www | cxowoman.github.io |
+
+若 Cloudflare 有 Proxy 狀態，GitHub Pages 建議先設為 DNS only，等 GitHub Pages 驗證與 HTTPS 生效後再評估是否開啟 Proxy。
 
 ## 之後更新
 

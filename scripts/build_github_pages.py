@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 DOCS = ROOT / "docs"
+CUSTOM_DOMAIN = "hana31923.com.tw"
 
 PUBLIC_EXCLUDES = {
     "EMAIL_SETUP.md",
@@ -49,6 +50,7 @@ def copy_public_site() -> None:
             shutil.copy2(source, target)
 
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
+    (DOCS / "CNAME").write_text(f"{CUSTOM_DOMAIN}\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
