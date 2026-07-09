@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 DOCS = ROOT / "docs"
-CUSTOM_DOMAIN = os.environ.get("HANA_GITHUB_PAGES_DOMAIN", "").strip()
+CUSTOM_DOMAIN = os.environ.get("HANA_GITHUB_PAGES_DOMAIN", "hana31923.com.tw").strip()
 
 PUBLIC_EXCLUDES = {
     "EMAIL_SETUP.md",
