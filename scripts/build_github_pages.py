@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import shutil
 import os
+from datetime import date
 from pathlib import Path
 
 
@@ -24,6 +25,7 @@ PUBLIC_EXCLUDES = {
 
 def public_index_html(html: str) -> str:
     html = html.replace('        <a href="./admin.html">網站後台</a>\n', "")
+    html = html.replace('    <script src="./config.js"></script>\n', "")
     html = html.replace('<script src="./published-data.js?v=3"></script>', '<script src="./published-data.js"></script>')
     html = html.replace('<script src="./script.js?v=49"></script>', '<script src="./script.js"></script>')
     html = html.replace('<script src="./content-posts.js?v=7"></script>', '<script src="./content-posts.js"></script>')
@@ -53,6 +55,23 @@ def copy_public_site() -> None:
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     if CUSTOM_DOMAIN:
         (DOCS / "CNAME").write_text(f"{CUSTOM_DOMAIN}\n", encoding="utf-8")
+        (DOCS / "robots.txt").write_text(
+            f"User-agent: *\nAllow: /\n\nSitemap: https://{CUSTOM_DOMAIN}/sitemap.xml\n",
+            encoding="utf-8",
+        )
+        (DOCS / "sitemap.xml").write_text(
+            f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://{CUSTOM_DOMAIN}/</loc>
+    <lastmod>{date.today().isoformat()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
+""",
+            encoding="utf-8",
+        )
 
 
 if __name__ == "__main__":

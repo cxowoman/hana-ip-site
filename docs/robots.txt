@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hana31923.com.tw/sitemap.xml
