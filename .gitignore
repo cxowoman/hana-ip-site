@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 .hana-admin-secret
+outputs/config.js
 /published-data.js
 /published-data.json
 backups/

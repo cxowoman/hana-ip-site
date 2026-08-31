@@ -16,6 +16,13 @@ const PUBLISHED_VERSION_KEY = "hana-site-published-version-v1";
 const RESTORE_VERSION = "2026-06-26-recovered-content-experience-testimonials-v4";
 
 const fallbackImage = "./assets/hana-portrait-standing.jpeg";
+const defaultRegistrationSheetUrl = "https://docs.google.com/spreadsheets/d/15RUfmIkwgZwlFfdXJ9LXaSxQZwarSdVCX9cIk0j2qFM/edit";
+const registrationCloudConfig = () => ({
+  googleSheetId: String(window.HANA_CONFIG?.registration?.googleSheetId || window.HANA_REGISTRATION_CONFIG?.googleSheetId || "15RUfmIkwgZwlFfdXJ9LXaSxQZwarSdVCX9cIk0j2qFM").trim(),
+  googleSheetUrl: String(window.HANA_CONFIG?.registration?.googleSheetUrl || window.HANA_REGISTRATION_CONFIG?.googleSheetUrl || defaultRegistrationSheetUrl).trim(),
+  webhookUrl: String(window.HANA_CONFIG?.registration?.webhookUrl || window.HANA_REGISTRATION_CONFIG?.webhookUrl || "").trim(),
+  readToken: String(window.HANA_CONFIG?.registration?.readToken || "").trim(),
+});
 const regionAliases = [
   { keywords: ["北北基", "台北", "臺北", "新北", "基隆", "北部"], city: "台北市" },
   { keywords: ["桃園"], city: "桃園市" },
@@ -563,6 +570,8 @@ let selectedCoachingId = "";
 let selectedExperienceId = "";
 let selectedTestimonialId = "";
 let draggedTestimonialId = "";
+let cachedRegistrations = [];
+let registrationRenderSerial = 0;
 
 const fileToDataUrl = (file, aspectRatio = null) =>
   new Promise((resolve) => {
@@ -770,6 +779,64 @@ const readContentPosts = () => {
 };
 const writeContentPosts = (posts) => writeJson(CONTENT_POSTS_KEY, posts);
 const readRegistrations = () => readJson(REGISTRATIONS_KEY, []);
+const firstText = (...values) => {
+  const value = values.find((item) => String(item ?? "").trim());
+  return value ?? "";
+};
+const normalizeRegistrationRecord = (item) => {
+  const record = item && typeof item === "object" ? item : {};
+  return {
+    courseTitle: firstText(record.courseTitle, record.eventTitle, record["課程名稱"], record["活動主題"]),
+    memberName: firstText(record.memberName, record.member_name, record.name, record["姓名"], record["稱呼"]),
+    meetupArea: firstText(record.meetupArea, record.memberArea, record["居住區域"], record["地區"]),
+    meetupGroup: firstText(record.meetupGroup, record["小聚群"]),
+    meetupGroupUrl: firstText(record.meetupGroupUrl, record["小聚群連結"]),
+    email: firstText(record.email, record.Email, record["Email"], record["電子信箱"]),
+    phone: firstText(record.phone, record["手機"], record["電話"]),
+    note: firstText(record.note, record["備註"]),
+    createdAt: firstText(record.createdAt, record.created_at, record["報名時間"], record["時間"]),
+    sourceUrl: firstText(record.sourceUrl, record["來源網址"]),
+    cloudStatus: firstText(record.cloudStatus, record.status, record["狀態"]),
+  };
+};
+const formatRegistrationDate = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("zh-TW");
+};
+const fetchRegistrationsJsonp = (webhookUrl, readToken) =>
+  new Promise((resolve, reject) => {
+    const callback = `hanaRegistrationCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    const separator = webhookUrl.includes("?") ? "&" : "?";
+    const cleanup = () => {
+      window.clearTimeout(timer);
+      script.remove();
+      delete window[callback];
+    };
+    const timer = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Google Sheet 讀取逾時"));
+    }, 12000);
+
+    window[callback] = (result) => {
+      cleanup();
+      resolve(result);
+    };
+    script.addEventListener("error", () => {
+      cleanup();
+      reject(new Error("Google Sheet 讀取失敗"));
+    });
+    script.src = `${webhookUrl}${separator}action=list&token=${encodeURIComponent(readToken)}&callback=${encodeURIComponent(callback)}&_=${Date.now()}`;
+    document.head.append(script);
+  });
+const fetchCloudRegistrations = async () => {
+  const { webhookUrl, readToken } = registrationCloudConfig();
+  if (!webhookUrl || !readToken) return null;
+  const result = await fetchRegistrationsJsonp(webhookUrl, readToken);
+  if (!result?.ok) throw new Error(result?.error || "Google Sheet 回傳錯誤");
+  return Array.isArray(result.registrations) ? result.registrations : [];
+};
 const publishedPayload = () => ({
   version: new Date().toISOString(),
   content: readContent(),
@@ -1581,31 +1648,67 @@ const renderTestimonialsAdmin = () => {
   fillTestimonialForm();
 };
 
-const renderRegistrations = () => {
-  const registrations = readRegistrations();
+const renderRegistrations = async () => {
+  const serial = ++registrationRenderSerial;
+  const config = registrationCloudConfig();
+  const status = $("#registrationCloudStatus");
+  const sheetLink = $("#registrationSheetLink");
+  if (sheetLink && config.googleSheetUrl) sheetLink.href = config.googleSheetUrl;
+
+  let registrations = readRegistrations().map(normalizeRegistrationRecord);
+  if (status) {
+    if (!config.webhookUrl) {
+      status.textContent = "Google Sheet 已建立；尚未填入 Apps Script Web App URL，目前只會顯示這台電腦暫存的報名。";
+    } else if (!config.readToken) {
+      status.textContent = "報名收件端已設定；後台尚未填入讀取 token，請直接打開 Google Sheet 查看完整名單。";
+    } else {
+      status.textContent = "正在從 Google Sheet 同步最新報名名單...";
+    }
+  }
+
+  try {
+    const cloudRegistrations = await fetchCloudRegistrations();
+    if (serial !== registrationRenderSerial) return;
+    if (cloudRegistrations) {
+      registrations = cloudRegistrations.map(normalizeRegistrationRecord);
+      if (status) status.textContent = `已從 Google Sheet 同步 ${registrations.length} 筆報名。`;
+    }
+  } catch {
+    if (serial !== registrationRenderSerial) return;
+    if (status) status.textContent = "Google Sheet 讀取失敗，目前先顯示這台電腦暫存資料；可打開 Google Sheet 確認完整名單。";
+  }
+
+  cachedRegistrations = registrations;
   $("#emptyRegistrations").classList.toggle("is-visible", !registrations.length);
   $("#registrationRows").innerHTML = registrations
     .map(
       (item) => `
         <tr>
+          <td>${escapeHtml(item.courseTitle)}</td>
           <td>${escapeHtml(item.memberName)}</td>
           <td>${escapeHtml(item.meetupArea)}</td>
           <td>${item.meetupGroupUrl ? `<a href="${escapeHtml(item.meetupGroupUrl)}" target="_blank" rel="noopener">${escapeHtml(item.meetupGroup || "加入社群")}</a>` : escapeHtml(item.meetupGroup || "")}</td>
           <td>${escapeHtml(item.email)}</td>
           <td>${escapeHtml(item.phone)}</td>
           <td>${escapeHtml(item.note)}</td>
-          <td>${escapeHtml(item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "")}</td>
+          <td>${escapeHtml(formatRegistrationDate(item.createdAt))}</td>
         </tr>
       `,
     )
     .join("");
 };
 
+$("#refreshRegistrationsButton").addEventListener("click", () => {
+  if (!requireAuth()) return;
+  renderRegistrations();
+});
+
 $("#exportRegistrationsButton").addEventListener("click", () => {
   if (!requireAuth()) return;
+  const registrations = cachedRegistrations.length ? cachedRegistrations : readRegistrations().map(normalizeRegistrationRecord);
   const rows = [
-    ["姓名", "居住區域", "小聚群", "小聚群連結", "Email", "手機", "備註", "時間"],
-    ...readRegistrations().map((item) => [item.memberName, item.meetupArea, item.meetupGroup, item.meetupGroupUrl, item.email, item.phone, item.note, item.createdAt]),
+    ["課程", "姓名", "居住區域", "小聚群", "小聚群連結", "Email", "手機", "備註", "時間"],
+    ...registrations.map((item) => [item.courseTitle, item.memberName, item.meetupArea, item.meetupGroup, item.meetupGroupUrl, item.email, item.phone, item.note, item.createdAt]),
   ];
   downloadText("hana-registrations.csv", rows.map((row) => row.map((cell) => `"${String(cell || "").replaceAll('"', '""')}"`).join(",")).join("\n"));
 });

@@ -4,8 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>涵捺 Hana｜網站後台</title>
-    <link rel="stylesheet" href="./admin.css?v=10" />
+    <link rel="stylesheet" href="./admin.css?v=11" />
     <script src="./config.js"></script>
+    <script src="./registration-public-config.js?v=1"></script>
   </head>
   <body>
     <main class="admin-app">
@@ -266,12 +267,20 @@
                 <p class="eyebrow">Registrations</p>
                 <h2>報名名單</h2>
               </div>
-              <button type="button" class="secondary" id="exportRegistrationsButton">匯出 CSV</button>
+              <div class="panel-actions">
+                <a class="sheet-link" id="registrationSheetLink" href="https://docs.google.com/spreadsheets/d/15RUfmIkwgZwlFfdXJ9LXaSxQZwarSdVCX9cIk0j2qFM/edit" target="_blank" rel="noopener">打開 Google Sheet</a>
+                <button type="button" class="secondary" id="refreshRegistrationsButton">重新整理</button>
+                <button type="button" class="secondary" id="exportRegistrationsButton">匯出 CSV</button>
+              </div>
+            </div>
+            <div class="registration-toolbar">
+              <p id="registrationCloudStatus" role="status">正在檢查 Google Sheet 連線...</p>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
+                    <th>課程</th>
                     <th>姓名</th>
                     <th>居住區域</th>
                     <th>小聚群</th>
@@ -318,6 +327,6 @@
     <script src="./content-posts.js?v=7"></script>
     <script src="./recovered-data.js?v=2"></script>
     <script src="./published-data.js?v=3"></script>
-    <script src="./admin.js?v=34"></script>
+    <script src="./admin.js?v=35"></script>
   </body>
 </html>

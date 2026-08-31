@@ -46,6 +46,11 @@ const PUBLISHED_VERSION_KEY = "hana-site-published-version-v1";
 const RESTORE_VERSION = "2026-06-26-recovered-content-experience-testimonials-v4";
 
 const fallbackImage = "./assets/hana-portrait-standing.jpeg";
+const registrationCloudConfig = () => ({
+  googleSheetId: String(window.HANA_REGISTRATION_CONFIG?.googleSheetId || window.HANA_CONFIG?.registration?.googleSheetId || "").trim(),
+  googleSheetUrl: String(window.HANA_REGISTRATION_CONFIG?.googleSheetUrl || window.HANA_CONFIG?.registration?.googleSheetUrl || "").trim(),
+  webhookUrl: String(window.HANA_REGISTRATION_CONFIG?.webhookUrl || window.HANA_CONFIG?.registration?.webhookUrl || "").trim(),
+});
 const meetupGroupLinks = {
   north: { label: "北部小聚群", url: "https://reurl.cc/rkvVor" },
   taoyuan: { label: "桃園小聚群", url: "https://reurl.cc/eQyoQK" },
@@ -967,6 +972,7 @@ const registrationForm = (course) => {
   const datalistId = `meetupAreaSuggestions-${String(course?.id || "course").replace(/[^a-z0-9_-]/gi, "")}`;
   return `
     <form class="registration-form" data-registration-form>
+      <input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
       <div class="registration-heading">
         <p class="eyebrow">Registration</p>
         <h3>會員報名</h3>
@@ -1026,6 +1032,55 @@ const showRegistrationSuccessModal = (area, group) => {
   document.querySelector("[data-registration-modal]")?.remove();
   document.body.insertAdjacentHTML("beforeend", registrationSuccessModal(area, group));
   document.querySelector("[data-registration-modal] .registration-modal__close")?.focus();
+};
+
+const currentRegistrationCourse = (form) => {
+  const type = form.closest("#onlineCourseDetail") ? "online" : "offline";
+  return selectedCourse(type);
+};
+
+const registrationPayload = (course, formData, meetupArea, meetupGroup) => ({
+  createdAt: new Date().toISOString(),
+  sourceUrl: window.location.href,
+  courseId: course?.id || "",
+  courseTitle: course?.title || "",
+  courseType: course?.type === "online" ? "線上課程" : "實體課程",
+  eventDate: course?.date || "",
+  eventTime: course?.startTime || "",
+  eventEndTime: course?.endTime || "",
+  eventLocation: course?.location || "",
+  eventCapacity: course?.capacity || "",
+  eventPrice: course?.price || "",
+  teacherName: course?.teacherName || "",
+  teacherEmail: course?.teacherEmail || "",
+  memberName: String(formData.get("memberName") || "").trim(),
+  meetupArea: String(meetupArea || "").trim(),
+  meetupGroup: meetupGroup?.label || "",
+  meetupGroupUrl: meetupGroup?.url || "",
+  email: String(formData.get("email") || "").trim(),
+  phone: String(formData.get("phone") || "").trim(),
+  note: String(formData.get("note") || "").trim(),
+  status: "已收到",
+});
+
+const writeLocalRegistration = (registration) => {
+  const registrations = JSON.parse(localStorage.getItem(REGISTRATIONS_KEY) || "[]");
+  registrations.push(registration);
+  localStorage.setItem(REGISTRATIONS_KEY, JSON.stringify(registrations));
+};
+
+const submitRegistrationToGoogleSheet = async (registration) => {
+  const { webhookUrl } = registrationCloudConfig();
+  if (!webhookUrl) return { ok: false, skipped: true };
+
+  await fetch(webhookUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(registration),
+  });
+
+  return { ok: true };
 };
 
 const updateMeetupPreview = (select) => {
@@ -1131,32 +1186,40 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") document.querySelector("[data-registration-modal]")?.remove();
 });
 
-document.addEventListener("submit", (event) => {
+document.addEventListener("submit", async (event) => {
   const form = event.target.closest("[data-registration-form]");
   if (!form) return;
   event.preventDefault();
   const data = new FormData(form);
+  if (String(data.get("website") || "").trim()) return;
   const meetupArea = data.get("meetupArea");
   const meetupGroup = getMeetupGroupForArea(meetupArea);
-  const registrations = JSON.parse(localStorage.getItem(REGISTRATIONS_KEY) || "[]");
-  registrations.push({
-    memberName: data.get("memberName"),
-    email: data.get("email"),
-    phone: data.get("phone"),
-    meetupArea,
-    meetupGroup: meetupGroup?.label || "",
-    meetupGroupUrl: meetupGroup?.url || "",
-    note: data.get("note"),
-    createdAt: new Date().toISOString(),
+  const registration = registrationPayload(currentRegistrationCourse(form), data, meetupArea, meetupGroup);
+  const submitButton = form.querySelector('button[type="submit"]');
+  const status = form.querySelector(".form-status");
+
+  if (submitButton) submitButton.disabled = true;
+  if (status) status.textContent = "正在送出報名資料...";
+
+  let cloudResult = { ok: false, skipped: true };
+  try {
+    cloudResult = await submitRegistrationToGoogleSheet(registration);
+  } catch (error) {
+    cloudResult = { ok: false, skipped: false, error };
+  }
+
+  writeLocalRegistration({
+    ...registration,
+    cloudStatus: cloudResult.ok ? "synced" : cloudResult.skipped ? "local-only" : "failed",
   });
-  localStorage.setItem(REGISTRATIONS_KEY, JSON.stringify(registrations));
+
   form.reset();
   const preview = form.querySelector("[data-meetup-preview]");
   if (preview) {
     preview.hidden = true;
     preview.innerHTML = "";
   }
-  const status = form.querySelector(".form-status");
+
   if (meetupGroup) {
     status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
     showRegistrationSuccessModal(meetupArea, meetupGroup);
@@ -1164,6 +1227,7 @@ document.addEventListener("submit", (event) => {
     status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
     showRegistrationSuccessModal(meetupArea, null);
   }
+  if (submitButton) submitButton.disabled = false;
 });
 
 const renderAll = () => {

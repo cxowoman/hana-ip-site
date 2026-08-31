@@ -797,6 +797,15 @@ dd {
   margin-top: 34px;
 }
 
+.form-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .course-agenda p:not(.eyebrow),
 .email-sequence,
 .registration-note {
