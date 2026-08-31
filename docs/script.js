@@ -61,7 +61,14 @@ const meetupAreaGroups = {
   雲嘉南: "kaohsiung",
   高雄: "kaohsiung",
 };
-const meetupAreaOptions = Object.keys(meetupAreaGroups);
+const meetupAreaOptions = ["台北市", "新北市", "基隆市", "桃園市", "新竹市", "新竹縣", "台中市", "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "台南市", "高雄市"];
+const regionAliases = [
+  { keywords: ["北北基", "台北", "臺北", "新北", "基隆", "北部"], group: "north", city: "台北市" },
+  { keywords: ["桃園"], group: "taoyuan", city: "桃園市" },
+  { keywords: ["新竹", "竹北"], group: "hsinchu", city: "新竹市" },
+  { keywords: ["中彰投", "台中", "臺中", "彰化", "南投"], group: "taichung", city: "台中市" },
+  { keywords: ["雲嘉南", "雲林", "嘉義", "台南", "臺南", "高雄"], group: "kaohsiung", city: "高雄市" },
+];
 const defaultExperienceMetrics = {
   "experience.metric1": "超過 20 年創業歷程",
   "experience.metric2": "4 個線上事業",
@@ -726,6 +733,21 @@ const publicCourses = (type) =>
 
 const publicContentPosts = () => readContentPosts().filter((post) => post.status === "published");
 
+const normalizeRegionText = (value) => String(value || "").trim().replaceAll("臺", "台");
+
+const matchRegionAlias = (value) => {
+  const normalized = normalizeRegionText(value);
+  if (!normalized) return null;
+  return regionAliases.find((item) => item.keywords.some((keyword) => normalized.includes(normalizeRegionText(keyword)))) || null;
+};
+
+const courseRegion = (course) => {
+  const manualRegion = String(course?.region || "").trim();
+  if (manualRegion) return manualRegion;
+  const inferred = matchRegionAlias(course?.location);
+  return inferred?.city || "";
+};
+
 const formatDate = (course) => {
   if (!course.date) return "日期未定";
   const date = new Date(`${course.date}T${course.startTime || "00:00"}`);
@@ -757,23 +779,29 @@ const selectedContentPost = () => {
   return posts.find((post) => post.id === selectedId) || posts[0];
 };
 
-const courseCard = (course) => `
-  <article class="event-card">
-    <div class="course-cover">
-      <img src="${escapeHtml(course.image || fallbackImage)}" alt="${escapeHtml(course.title)}" />
-    </div>
-    <div class="event-card__body">
-      <p class="tag">${course.type === "offline" ? "實體課程" : "線上課程"}</p>
-      <h3>${escapeHtml(course.title)}</h3>
-      <div class="event-card__meta">
-        <div><span>日期與時間</span><strong>${escapeHtml(formatDate(course))}</strong></div>
-        <div><span>名額</span><strong>${escapeHtml(course.capacity || "名額未定")} 位</strong></div>
-        <div><span>講師</span><strong>${escapeHtml(course.teacherName || "涵捺 Hana")}</strong></div>
+const courseCard = (course) => {
+  const region = courseRegion(course);
+  return `
+    <article class="event-card">
+      <div class="course-cover">
+        <img src="${escapeHtml(course.image || fallbackImage)}" alt="${escapeHtml(course.title)}" />
       </div>
-      <a class="event-card__button" href="${course.type === "offline" ? "#course-detail" : "#online-course-detail"}" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
-    </div>
-  </article>
-`;
+      <div class="event-card__body">
+        <div class="course-tag-row">
+          <p class="tag">${course.type === "offline" ? "實體課程" : "線上課程"}</p>
+          ${course.type === "offline" && region ? `<p class="course-region" aria-label="課程地區"><span aria-hidden="true"></span>${escapeHtml(region)}</p>` : ""}
+        </div>
+        <h3>${escapeHtml(course.title)}</h3>
+        <div class="event-card__meta">
+          <div><span>日期與時間</span><strong>${escapeHtml(formatDate(course))}</strong></div>
+          <div><span>名額</span><strong>${escapeHtml(course.capacity || "名額未定")} 位</strong></div>
+          <div><span>講師</span><strong>${escapeHtml(course.teacherName || "涵捺 Hana")}</strong></div>
+        </div>
+        <a class="event-card__button" href="${course.type === "offline" ? "#course-detail" : "#online-course-detail"}" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
+      </div>
+    </article>
+  `;
+};
 
 const contentPostCard = (post) => {
   const excerpt = post.subtitle || textFromHtml(post.body).slice(0, 96);
@@ -939,33 +967,37 @@ const renderCourseLists = () => {
   }
 };
 
-const registrationForm = (course) => `
-  <form class="registration-form" data-registration-form>
-    <div class="registration-heading">
-      <p class="eyebrow">Registration</p>
-      <h3>會員報名</h3>
-    </div>
-    <div class="form-grid">
-      <label>會員姓名<input name="memberName" autocomplete="name" required /></label>
-      <label>會員身份<select name="memberType" required><option>正式會員</option><option>一般學員</option><option>企業團隊</option></select></label>
-      <label>Email<input name="email" type="email" autocomplete="email" required /></label>
-      <label>手機<input name="phone" autocomplete="tel" required /></label>
-      <label class="wide">所在區域<select name="meetupArea" data-meetup-area required><option value="">請選擇區域</option>${meetupAreaOptions
-        .map((area) => `<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`)
-        .join("")}</select></label>
-      <div class="meetup-link-preview wide" data-meetup-preview hidden></div>
-      <label class="wide">備註<textarea name="note" rows="4" placeholder="飲食、同行人、其他需求"></textarea></label>
-    </div>
-    <div class="form-footer">
-      <p class="registration-note">送出後會收到報名成功信，並於 48 小時後、課程前三天及課程前一天收到提醒。</p>
-      <button class="button primary" type="submit">確認報名</button>
-    </div>
-    <p class="form-status" role="status"></p>
-  </form>
-`;
+const registrationForm = (course) => {
+  const datalistId = `meetupAreaSuggestions-${String(course?.id || "course").replace(/[^a-z0-9_-]/gi, "")}`;
+  return `
+    <form class="registration-form" data-registration-form>
+      <div class="registration-heading">
+        <p class="eyebrow">Registration</p>
+        <h3>會員報名</h3>
+      </div>
+      <datalist id="${escapeHtml(datalistId)}">
+        ${meetupAreaOptions.map((area) => `<option value="${escapeHtml(area)}"></option>`).join("")}
+      </datalist>
+      <div class="form-grid">
+        <label>稱呼或姓名<input name="memberName" autocomplete="name" required /></label>
+        <label>居住區域<input name="meetupArea" data-meetup-area list="${escapeHtml(datalistId)}" placeholder="例：台中市、台北市" required /></label>
+        <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+        <label>手機<input name="phone" autocomplete="tel" required /></label>
+        <div class="meetup-link-preview wide" data-meetup-preview hidden></div>
+        <label class="wide">備註<textarea name="note" rows="4" placeholder="飲食、同行人、其他需求"></textarea></label>
+      </div>
+      <div class="form-footer">
+        <p class="registration-note">送出後會收到報名成功信，並於 48 小時後、課程前三天及課程前一天收到提醒。</p>
+        <button class="button primary" type="submit">確認報名</button>
+      </div>
+      <p class="form-status" role="status"></p>
+    </form>
+  `;
+};
 
 const getMeetupGroupForArea = (area) => {
-  const groupKey = meetupAreaGroups[String(area || "").trim()];
+  const normalized = normalizeRegionText(area);
+  const groupKey = meetupAreaGroups[normalized] || matchRegionAlias(normalized)?.group;
   return groupKey ? meetupGroupLinks[groupKey] : null;
 };
 
@@ -976,6 +1008,29 @@ const meetupGroupCard = (area, group, context = "你選擇的區域對應") => `
     <a href="${escapeHtml(group.url)}" target="_blank" rel="noopener">加入社群連結</a>
   </div>
 `;
+
+const registrationSuccessModal = (area, group) => `
+  <div class="registration-modal" data-registration-modal>
+    <div class="registration-modal__backdrop" data-close-registration-modal></div>
+    <section class="registration-modal__panel" role="dialog" aria-modal="true" aria-labelledby="registrationSuccessTitle">
+      <button class="registration-modal__close" type="button" data-close-registration-modal aria-label="關閉">×</button>
+      <p class="eyebrow">Registration Complete</p>
+      <h3 id="registrationSuccessTitle">報名完成</h3>
+      <p>你的報名資料已送出。依照你填寫的居住區域「${escapeHtml(area)}」，可以加入對應的小聚群。</p>
+      ${
+        group
+          ? `<a class="button primary registration-modal__cta" href="${escapeHtml(group.url)}" target="_blank" rel="noopener">加入${escapeHtml(group.label)}</a>`
+          : `<p class="registration-modal__hint">目前無法判斷對應小聚群，請確認居住區域是否填寫完整。</p>`
+      }
+    </section>
+  </div>
+`;
+
+const showRegistrationSuccessModal = (area, group) => {
+  document.querySelector("[data-registration-modal]")?.remove();
+  document.body.insertAdjacentHTML("beforeend", registrationSuccessModal(area, group));
+  document.querySelector("[data-registration-modal] .registration-modal__close")?.focus();
+};
 
 const updateMeetupPreview = (select) => {
   const form = select.closest("[data-registration-form]");
@@ -1010,6 +1065,7 @@ const renderCourseDetail = (type) => {
       <p class="eyebrow">Event Details</p>
       <h2>${escapeHtml(course.title)}</h2>
       <div class="detail-table event-facts">
+        ${type === "offline" && courseRegion(course) ? `<div class="event-fact"><span>課程地區</span><strong>${escapeHtml(courseRegion(course))}</strong></div>` : ""}
         <div class="event-fact"><span>活動日期</span><strong>${escapeHtml(course.date || "日期未定")}</strong></div>
         <div class="event-fact"><span>開始時間</span><strong>${escapeHtml(course.startTime || "時間未定")}</strong></div>
         <div class="event-fact"><span>結束時間</span><strong>${escapeHtml(course.endTime || "時間未定")}</strong></div>
@@ -1066,6 +1122,20 @@ document.addEventListener("change", (event) => {
   if (areaSelect) updateMeetupPreview(areaSelect);
 });
 
+document.addEventListener("input", (event) => {
+  const areaInput = event.target.closest("[data-meetup-area]");
+  if (areaInput) updateMeetupPreview(areaInput);
+});
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest("[data-close-registration-modal]")) return;
+  document.querySelector("[data-registration-modal]")?.remove();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") document.querySelector("[data-registration-modal]")?.remove();
+});
+
 document.addEventListener("submit", (event) => {
   const form = event.target.closest("[data-registration-form]");
   if (!form) return;
@@ -1076,7 +1146,6 @@ document.addEventListener("submit", (event) => {
   const registrations = JSON.parse(localStorage.getItem(REGISTRATIONS_KEY) || "[]");
   registrations.push({
     memberName: data.get("memberName"),
-    memberType: data.get("memberType"),
     email: data.get("email"),
     phone: data.get("phone"),
     meetupArea,
@@ -1095,8 +1164,10 @@ document.addEventListener("submit", (event) => {
   const status = form.querySelector(".form-status");
   if (meetupGroup) {
     status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
+    showRegistrationSuccessModal(meetupArea, meetupGroup);
   } else {
     status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
+    showRegistrationSuccessModal(meetupArea, null);
   }
 });
 

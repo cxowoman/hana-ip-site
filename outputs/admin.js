@@ -16,6 +16,23 @@ const PUBLISHED_VERSION_KEY = "hana-site-published-version-v1";
 const RESTORE_VERSION = "2026-06-26-recovered-content-experience-testimonials-v4";
 
 const fallbackImage = "./assets/hana-portrait-standing.jpeg";
+const regionAliases = [
+  { keywords: ["北北基", "台北", "臺北", "新北", "基隆", "北部"], city: "台北市" },
+  { keywords: ["桃園"], city: "桃園市" },
+  { keywords: ["新竹", "竹北"], city: "新竹市" },
+  { keywords: ["中彰投", "台中", "臺中", "彰化", "南投"], city: "台中市" },
+  { keywords: ["雲嘉南", "雲林", "嘉義", "台南", "臺南", "高雄"], city: "高雄市" },
+];
+
+const normalizeRegionText = (value) => String(value || "").trim().replaceAll("臺", "台");
+
+const inferCourseRegion = (value) => {
+  const normalized = normalizeRegionText(value);
+  if (!normalized) return "";
+  const match = regionAliases.find((item) => item.keywords.some((keyword) => normalized.includes(normalizeRegionText(keyword))));
+  return match?.city || "";
+};
+
 const defaultExperienceMetrics = {
   "experience.metric1": "超過 20 年創業歷程",
   "experience.metric2": "4 個線上事業",
@@ -48,6 +65,7 @@ const seedCourses = [
     startTime: "10:00",
     endTime: "17:00",
     location: "台北市中山區｜報名成功後寄送詳細地址",
+    region: "台北市",
     capacity: "12",
     price: "NT$ 3,800",
     category: "個人 IP",
@@ -1004,6 +1022,10 @@ const fillCourseForm = () => {
   const course = readCourses().find((item) => item.id === selectedCourseId) || {};
   [...adminCourseForm.elements].forEach((element) => {
     if (!element.name || element.type === "file") return;
+    if (element.name === "region") {
+      element.value = course.region ?? inferCourseRegion(course.location);
+      return;
+    }
     element.value = course[element.name] ?? "";
   });
 };
@@ -1070,6 +1092,7 @@ adminCourseForm.addEventListener("submit", async (event) => {
     startTime: String(data.get("startTime") || ""),
     endTime: String(data.get("endTime") || ""),
     location: String(data.get("location") || "").trim(),
+    region: String(data.get("region") || "").trim(),
     capacity: String(data.get("capacity") || "").trim(),
     price: String(data.get("price") || "").trim(),
     category: String(data.get("category") || "").trim(),
@@ -1569,6 +1592,8 @@ const renderRegistrations = () => {
       (item) => `
         <tr>
           <td>${escapeHtml(item.memberName)}</td>
+          <td>${escapeHtml(item.meetupArea)}</td>
+          <td>${item.meetupGroupUrl ? `<a href="${escapeHtml(item.meetupGroupUrl)}" target="_blank" rel="noopener">${escapeHtml(item.meetupGroup || "加入社群")}</a>` : escapeHtml(item.meetupGroup || "")}</td>
           <td>${escapeHtml(item.email)}</td>
           <td>${escapeHtml(item.phone)}</td>
           <td>${escapeHtml(item.note)}</td>
@@ -1581,7 +1606,10 @@ const renderRegistrations = () => {
 
 $("#exportRegistrationsButton").addEventListener("click", () => {
   if (!requireAuth()) return;
-  const rows = [["姓名", "Email", "手機", "備註", "時間"], ...readRegistrations().map((item) => [item.memberName, item.email, item.phone, item.note, item.createdAt])];
+  const rows = [
+    ["姓名", "居住區域", "小聚群", "小聚群連結", "Email", "手機", "備註", "時間"],
+    ...readRegistrations().map((item) => [item.memberName, item.meetupArea, item.meetupGroup, item.meetupGroupUrl, item.email, item.phone, item.note, item.createdAt]),
+  ];
   downloadText("hana-registrations.csv", rows.map((row) => row.map((cell) => `"${String(cell || "").replaceAll('"', '""')}"`).join(",")).join("\n"));
 });
 

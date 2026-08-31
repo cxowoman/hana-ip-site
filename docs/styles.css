@@ -566,6 +566,41 @@ h3 {
   padding: clamp(22px, 3.4vw, 34px);
 }
 
+.course-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.course-tag-row .tag {
+  margin: 0;
+}
+
+.course-region {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(186, 145, 78, 0.34);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(255, 248, 238, 0.86);
+  color: #7c5c27;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.course-region span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(186, 145, 78, 0.16);
+}
+
 .event-card__body h3 {
   color: #1f2a24;
   font-size: clamp(26px, 3.4vw, 38px);
@@ -923,6 +958,77 @@ dd {
 .form-status {
   color: #003e3e;
   font-weight: 800;
+}
+
+.registration-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.registration-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 42, 36, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.registration-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 20px;
+  padding: clamp(28px, 5vw, 42px);
+  background: #fffaf5;
+  color: #1f2a24;
+  box-shadow: 0 24px 70px rgba(31, 42, 36, 0.28);
+}
+
+.registration-modal__panel h3 {
+  margin: 0 0 14px;
+  color: var(--wine);
+  font-family: "Noto Serif TC", "Songti TC", Georgia, serif;
+  font-size: clamp(30px, 5vw, 42px);
+}
+
+.registration-modal__panel p:not(.eyebrow) {
+  margin: 0 0 24px;
+  color: #4d5b54;
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.registration-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(94, 37, 49, 0.16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--wine);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.registration-modal__cta {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.registration-modal__hint {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  background: #f5f7f3;
 }
 
 .lecture-list {
