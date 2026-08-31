@@ -474,11 +474,7 @@ const pageRoutes = {
   "course-detail": "#course-detail",
   online: "#online",
   "online-course-detail": "#online-course-detail",
-  share: "#share",
-  "share-detail": "#share-detail",
   experience: "#experience",
-  monthly: "#monthly",
-  deep: "#deep",
   consult: "#consult",
 };
 
@@ -1100,7 +1096,6 @@ const routeContent = () => {
     document.querySelector(pageSelector)?.classList.add("is-active-page");
     if (hash === "course-detail") renderCourseDetail("offline");
     if (hash === "online-course-detail") renderCourseDetail("online");
-    if (hash === "share-detail") renderContentShareDetail();
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
     return;
   }
