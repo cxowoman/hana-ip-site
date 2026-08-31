@@ -426,8 +426,8 @@ const contentSections = [
     title: "認識涵捺",
     fields: [
       ["about.eyebrow", "小標", "text", "About Hana"],
-      ["about.title", "標題", "text", "認識涵捺 Hana"],
-      ["about.body", "價值主張", "textarea", "我是涵捺 Hana，收入成長顧問 × 商業營收成長專家，協助個人品牌、創業者與中小企業，用 AI 內容策略、社群漏斗與商品變現設計，把收入成長做成可追蹤、可優化、可複製的系統。"],
+      ["about.title", "標題", "textarea", "收入成長顧問\n涵捺 Hana"],
+      ["about.body", "價值主張", "textarea", "擁有 20 年創業經歷與 10 年以上電商行銷實戰，協助品牌與創業者從商業定位、商品設計、內容流量到社群轉換，導入 AI 與數據思維，降低試錯成本，建立可複製的營收成長模式。"],
       ["about.image", "形象照", "image", "./assets/hana-portrait-front.jpeg"],
       ["about.badge1", "亮點 1", "text", "20 年創業經歷"],
       ["about.badge2", "亮點 2", "text", "10+ 年電商實戰"],

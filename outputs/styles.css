@@ -310,6 +310,7 @@ h3 {
 
 .about-hero h2 {
   font-size: clamp(46px, 7vw, 82px);
+  white-space: pre-line;
 }
 
 .about-visual {
