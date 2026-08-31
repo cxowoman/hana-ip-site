@@ -46,6 +46,22 @@ const PUBLISHED_VERSION_KEY = "hana-site-published-version-v1";
 const RESTORE_VERSION = "2026-06-26-recovered-content-experience-testimonials-v4";
 
 const fallbackImage = "./assets/hana-portrait-standing.jpeg";
+const meetupGroupLinks = {
+  north: { label: "北部小聚群", url: "https://reurl.cc/rkvVor" },
+  taoyuan: { label: "桃園小聚群", url: "https://reurl.cc/eQyoQK" },
+  hsinchu: { label: "新竹小聚群", url: "https://reurl.cc/Leloe4" },
+  taichung: { label: "台中小聚群", url: "https://reurl.cc/Ymqoml" },
+  kaohsiung: { label: "高雄小聚群", url: "https://reurl.cc/RReo2g" },
+};
+const meetupAreaGroups = {
+  北北基: "north",
+  桃園: "taoyuan",
+  新竹: "hsinchu",
+  中彰投: "taichung",
+  雲嘉南: "kaohsiung",
+  高雄: "kaohsiung",
+};
+const meetupAreaOptions = Object.keys(meetupAreaGroups);
 const defaultExperienceMetrics = {
   "experience.metric1": "超過 20 年創業歷程",
   "experience.metric2": "4 個線上事業",
@@ -934,6 +950,10 @@ const registrationForm = (course) => `
       <label>會員身份<select name="memberType" required><option>正式會員</option><option>一般學員</option><option>企業團隊</option></select></label>
       <label>Email<input name="email" type="email" autocomplete="email" required /></label>
       <label>手機<input name="phone" autocomplete="tel" required /></label>
+      <label class="wide">所在區域<select name="meetupArea" data-meetup-area required><option value="">請選擇區域</option>${meetupAreaOptions
+        .map((area) => `<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`)
+        .join("")}</select></label>
+      <div class="meetup-link-preview wide" data-meetup-preview hidden></div>
       <label class="wide">備註<textarea name="note" rows="4" placeholder="飲食、同行人、其他需求"></textarea></label>
     </div>
     <div class="form-footer">
@@ -943,6 +963,33 @@ const registrationForm = (course) => `
     <p class="form-status" role="status"></p>
   </form>
 `;
+
+const getMeetupGroupForArea = (area) => {
+  const groupKey = meetupAreaGroups[String(area || "").trim()];
+  return groupKey ? meetupGroupLinks[groupKey] : null;
+};
+
+const meetupGroupCard = (area, group, context = "你選擇的區域對應") => `
+  <div class="meetup-link-card">
+    <span>${escapeHtml(context)}「${escapeHtml(area)}」</span>
+    <strong>${escapeHtml(group.label)}</strong>
+    <a href="${escapeHtml(group.url)}" target="_blank" rel="noopener">加入社群連結</a>
+  </div>
+`;
+
+const updateMeetupPreview = (select) => {
+  const form = select.closest("[data-registration-form]");
+  const preview = form?.querySelector("[data-meetup-preview]");
+  if (!preview) return;
+  const group = getMeetupGroupForArea(select.value);
+  if (!group) {
+    preview.hidden = true;
+    preview.innerHTML = "";
+    return;
+  }
+  preview.hidden = false;
+  preview.innerHTML = meetupGroupCard(select.value, group);
+};
 
 const renderCourseDetail = (type) => {
   const course = selectedCourse(type);
@@ -1014,23 +1061,43 @@ document.addEventListener("click", (event) => {
   if (openContentButton) setSelectedContentPost(openContentButton.dataset.openContent);
 });
 
+document.addEventListener("change", (event) => {
+  const areaSelect = event.target.closest("[data-meetup-area]");
+  if (areaSelect) updateMeetupPreview(areaSelect);
+});
+
 document.addEventListener("submit", (event) => {
   const form = event.target.closest("[data-registration-form]");
   if (!form) return;
   event.preventDefault();
   const data = new FormData(form);
+  const meetupArea = data.get("meetupArea");
+  const meetupGroup = getMeetupGroupForArea(meetupArea);
   const registrations = JSON.parse(localStorage.getItem(REGISTRATIONS_KEY) || "[]");
   registrations.push({
     memberName: data.get("memberName"),
+    memberType: data.get("memberType"),
     email: data.get("email"),
     phone: data.get("phone"),
+    meetupArea,
+    meetupGroup: meetupGroup?.label || "",
+    meetupGroupUrl: meetupGroup?.url || "",
     note: data.get("note"),
     createdAt: new Date().toISOString(),
   });
   localStorage.setItem(REGISTRATIONS_KEY, JSON.stringify(registrations));
   form.reset();
-  form.querySelector(".form-status").textContent =
-    "展示模式：報名資料已存在此瀏覽器。設定 Supabase/Gmail 後，送出就會自動寄出四封信。";
+  const preview = form.querySelector("[data-meetup-preview]");
+  if (preview) {
+    preview.hidden = true;
+    preview.innerHTML = "";
+  }
+  const status = form.querySelector(".form-status");
+  if (meetupGroup) {
+    status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
+  } else {
+    status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
+  }
 });
 
 const renderAll = () => {

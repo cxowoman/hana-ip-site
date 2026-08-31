@@ -860,6 +860,48 @@ dd {
   margin-top: 22px;
 }
 
+.meetup-link-preview {
+  margin-top: -4px;
+}
+
+.meetup-link-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  align-items: center;
+  border: 1px solid rgba(0, 62, 62, 0.18);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  background: #f4f8f5;
+  color: #1f2a24;
+}
+
+.meetup-link-card span {
+  color: #63716a;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.meetup-link-card strong {
+  color: #003e3e;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.meetup-link-card a {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #003e3e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 .form-footer {
   display: flex;
   flex-wrap: wrap;
@@ -1765,6 +1807,17 @@ dd {
 
   .detail-table .wide {
     grid-column: auto;
+  }
+
+  .meetup-link-card {
+    grid-template-columns: 1fr;
+  }
+
+  .meetup-link-card a {
+    grid-row: auto;
+    grid-column: auto;
+    width: 100%;
+    text-align: center;
   }
 
   .lecture-list span {
