@@ -51,6 +51,7 @@ const registrationCloudConfig = () => ({
   googleSheetUrl: String(window.HANA_REGISTRATION_CONFIG?.googleSheetUrl || window.HANA_CONFIG?.registration?.googleSheetUrl || "").trim(),
   webhookUrl: String(window.HANA_REGISTRATION_CONFIG?.webhookUrl || window.HANA_CONFIG?.registration?.webhookUrl || "").trim(),
 });
+const registrationCloudReady = () => Boolean(registrationCloudConfig().webhookUrl);
 const meetupGroupLinks = {
   north: { label: "北部小聚群", url: "https://reurl.cc/rkvVor" },
   taoyuan: { label: "桃園小聚群", url: "https://reurl.cc/eQyoQK" },
@@ -970,6 +971,7 @@ const renderCourseLists = () => {
 
 const registrationForm = (course) => {
   const datalistId = `meetupAreaSuggestions-${String(course?.id || "course").replace(/[^a-z0-9_-]/gi, "")}`;
+  const canSubmit = registrationCloudReady();
   return `
     <form class="registration-form" data-registration-form>
       <input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
@@ -989,8 +991,8 @@ const registrationForm = (course) => {
         <label class="wide">備註<textarea name="note" rows="4" placeholder="飲食、同行人、其他需求"></textarea></label>
       </div>
       <div class="form-footer">
-        <p class="registration-note">送出後會收到報名成功信，並於 48 小時後、課程前三天及課程前一天收到提醒。</p>
-        <button class="button primary" type="submit">確認報名</button>
+        <p class="registration-note">${canSubmit ? "送出後會收到報名成功信，並於 48 小時後、課程前三天及課程前一天收到提醒。" : "報名資料庫尚未完成連線，請先聯繫 Hana 或稍後再試。"}</p>
+        <button class="button primary" type="submit" ${canSubmit ? "" : "disabled"}>確認報名</button>
       </div>
       <p class="form-status" role="status"></p>
     </form>
@@ -1071,7 +1073,7 @@ const writeLocalRegistration = (registration) => {
 
 const submitRegistrationToGoogleSheet = async (registration) => {
   const { webhookUrl } = registrationCloudConfig();
-  if (!webhookUrl) return { ok: false, skipped: true };
+  if (!webhookUrl) return { ok: false, skipped: true, reason: "missing-webhook" };
 
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 10000);
@@ -1212,6 +1214,12 @@ document.addEventListener("click", (event) => {
   const submitButton = event.target.closest("[data-registration-form] button[type='submit']");
   if (!submitButton) return;
   const form = submitButton.closest("[data-registration-form]");
+  if (!registrationCloudReady()) {
+    event.preventDefault();
+    const status = form?.querySelector(".form-status");
+    if (status) status.textContent = "報名資料庫尚未完成連線，這次尚未送出。請先完成 Google Sheet Apps Script Web App URL 設定。";
+    return;
+  }
   if (!form || form.checkValidity()) return;
   event.preventDefault();
   showRegistrationValidation(form);
@@ -1225,6 +1233,11 @@ document.addEventListener("submit", async (event) => {
   const form = event.target.closest("[data-registration-form]");
   if (!form) return;
   event.preventDefault();
+  if (!registrationCloudReady()) {
+    const status = form.querySelector(".form-status");
+    if (status) status.textContent = "報名資料庫尚未完成連線，這次尚未送出。請先完成 Google Sheet Apps Script Web App URL 設定。";
+    return;
+  }
   if (!form.checkValidity()) {
     showRegistrationValidation(form);
     return;
