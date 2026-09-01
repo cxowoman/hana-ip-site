@@ -1073,14 +1073,40 @@ const submitRegistrationToGoogleSheet = async (registration) => {
   const { webhookUrl } = registrationCloudConfig();
   if (!webhookUrl) return { ok: false, skipped: true };
 
-  await fetch(webhookUrl, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(registration),
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 10000);
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(registration),
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   return { ok: true };
+};
+
+const registrationFieldLabels = {
+  memberName: "稱呼或姓名",
+  meetupArea: "居住區域",
+  email: "Email",
+  phone: "手機",
+};
+
+const showRegistrationValidation = (form) => {
+  const status = form.querySelector(".form-status");
+  const missing = Object.entries(registrationFieldLabels)
+    .filter(([name]) => !String(new FormData(form).get(name) || "").trim())
+    .map(([, label]) => label);
+  if (status) {
+    status.textContent = missing.length ? `請先填寫：${missing.join("、")}。` : "請確認欄位格式是否正確。";
+  }
+  form.querySelector(":invalid")?.focus();
+  form.reportValidity();
 };
 
 const updateMeetupPreview = (select) => {
@@ -1182,6 +1208,15 @@ document.addEventListener("click", (event) => {
   document.querySelector("[data-registration-modal]")?.remove();
 });
 
+document.addEventListener("click", (event) => {
+  const submitButton = event.target.closest("[data-registration-form] button[type='submit']");
+  if (!submitButton) return;
+  const form = submitButton.closest("[data-registration-form]");
+  if (!form || form.checkValidity()) return;
+  event.preventDefault();
+  showRegistrationValidation(form);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") document.querySelector("[data-registration-modal]")?.remove();
 });
@@ -1190,6 +1225,10 @@ document.addEventListener("submit", async (event) => {
   const form = event.target.closest("[data-registration-form]");
   if (!form) return;
   event.preventDefault();
+  if (!form.checkValidity()) {
+    showRegistrationValidation(form);
+    return;
+  }
   const data = new FormData(form);
   if (String(data.get("website") || "").trim()) return;
   const meetupArea = data.get("meetupArea");
@@ -1221,10 +1260,10 @@ document.addEventListener("submit", async (event) => {
   }
 
   if (meetupGroup) {
-    status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
+    if (status) status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
     showRegistrationSuccessModal(meetupArea, meetupGroup);
   } else {
-    status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
+    if (status) status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
     showRegistrationSuccessModal(meetupArea, null);
   }
   if (submitButton) submitButton.disabled = false;
