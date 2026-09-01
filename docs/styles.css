@@ -491,15 +491,16 @@ h3 {
 
 .event-showcase {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 430px));
-  gap: 28px;
-  width: min(1080px, 100%);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  width: min(1280px, 100%);
   margin: 0 auto;
-  justify-content: center;
   align-items: stretch;
 }
 
 .event-card {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius);
@@ -510,9 +511,9 @@ h3 {
 
 .course-cover {
   position: relative;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: #062727;
+  background: #fff8ee;
 }
 
 .course-cover::after {
@@ -525,6 +526,7 @@ h3 {
   height: 100%;
   object-fit: contain;
   object-position: center center;
+  background: #fff8ee;
 }
 
 .course-cover__copy,
@@ -569,6 +571,9 @@ h3 {
 }
 
 .event-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: clamp(22px, 3.4vw, 34px);
 }
 
@@ -645,6 +650,7 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: auto;
   min-height: 58px;
   border: 2px solid #003e3e;
   border-radius: var(--radius);
@@ -657,6 +663,60 @@ h3 {
 .event-card__button::after {
   content: "→";
   font-size: 30px;
+}
+
+.course-pagination {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.course-pagination button {
+  min-width: 106px;
+  min-height: 46px;
+  border: 1px solid rgba(255, 248, 238, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 248, 238, 0.14);
+  color: #fff8ee;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.course-pagination button:not(:disabled):hover {
+  background: #fff8ee;
+  color: var(--wine);
+}
+
+.course-pagination button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.course-pagination span {
+  color: #fff8ee;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.lecture-list .course-pagination button {
+  border-color: var(--line);
+  background: #fff;
+  color: #003e3e;
+}
+
+.lecture-list .course-pagination button:not(:disabled):hover {
+  border-color: #003e3e;
+  background: #003e3e;
+  color: #fff;
+}
+
+.lecture-list .course-pagination span {
+  color: var(--ink);
 }
 
 .course-card,
@@ -751,7 +811,7 @@ dd {
   aspect-ratio: 3 / 4;
   object-fit: contain;
   object-position: center center;
-  background: #062727;
+  background: #fff8ee;
 }
 
 .course-info h2 {
@@ -1781,6 +1841,11 @@ dd {
     display: block;
   }
 
+  .event-showcase {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(720px, 100%);
+  }
+
   .nav {
     position: fixed;
     top: 71px;
@@ -1844,7 +1909,6 @@ dd {
   .about-hero,
   .about-story,
   .course-grid,
-  .event-showcase,
   .course-detail,
   .credential-grid,
   .share-grid,
@@ -1860,6 +1924,11 @@ dd {
 
   .seo-faq-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .event-showcase {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(680px, 100%);
   }
 
   .course-poster {
@@ -1896,11 +1965,81 @@ dd {
   }
 
   .course-cover {
+    aspect-ratio: 4 / 5;
     min-height: 0;
   }
 
   .course-cover img {
     height: 100%;
+  }
+
+  .event-showcase {
+    gap: 12px;
+    width: min(100%, 460px);
+  }
+
+  .event-card {
+    border-radius: 14px;
+    box-shadow: 0 10px 22px rgba(36, 54, 42, 0.08);
+  }
+
+  .event-card__body {
+    padding: 12px;
+  }
+
+  .event-card__body .course-tag-row {
+    display: none;
+  }
+
+  .event-card__body h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    line-height: 1.28;
+  }
+
+  .event-card__meta {
+    gap: 0;
+    margin: 0 0 12px;
+  }
+
+  .event-card__meta-item:not(.event-card__meta-date) {
+    display: none;
+  }
+
+  .event-card__meta span {
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+
+  .event-card__meta strong {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .event-card__button {
+    justify-content: center;
+    min-height: 38px;
+    border-width: 1.5px;
+    border-radius: 999px;
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .event-card__button::after {
+    content: none;
+  }
+
+  .course-pagination {
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  .course-pagination button {
+    min-width: 82px;
+    min-height: 40px;
+    font-size: 14px;
   }
 
   .register-copy {

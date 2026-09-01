@@ -733,6 +733,34 @@ const applySiteContent = () => {
 const publicCourses = (type) =>
   readCourses().filter((course) => course.type === type && course.status === "published");
 
+const COURSE_PAGE_SIZE = 4;
+const coursePageState = {
+  offline: 0,
+  online: 0,
+};
+
+const pagedCourses = (type, courses) => {
+  const totalPages = Math.max(1, Math.ceil(courses.length / COURSE_PAGE_SIZE));
+  const currentPage = Math.min(Math.max(coursePageState[type] || 0, 0), totalPages - 1);
+  coursePageState[type] = currentPage;
+  const start = currentPage * COURSE_PAGE_SIZE;
+  return courses.slice(start, start + COURSE_PAGE_SIZE);
+};
+
+const coursePagination = (type, total) => {
+  const totalPages = Math.ceil(total / COURSE_PAGE_SIZE);
+  if (totalPages <= 1) return "";
+  const currentPage = coursePageState[type] || 0;
+  const label = type === "offline" ? "實體課程分頁" : "線上講座分頁";
+  return `
+    <nav class="course-pagination" aria-label="${label}">
+      <button type="button" data-course-page="${type}" data-page-direction="-1" ${currentPage <= 0 ? "disabled" : ""}>上一頁</button>
+      <span>${currentPage + 1} / ${totalPages}</span>
+      <button type="button" data-course-page="${type}" data-page-direction="1" ${currentPage >= totalPages - 1 ? "disabled" : ""}>下一頁</button>
+    </nav>
+  `;
+};
+
 const publicContentPosts = () => readContentPosts().filter((post) => post.status === "published");
 
 const normalizeRegionText = (value) => String(value || "").trim().replaceAll("臺", "台");
@@ -795,9 +823,9 @@ const courseCard = (course) => {
         </div>
         <h3>${escapeHtml(course.title)}</h3>
         <div class="event-card__meta">
-          <div><span>日期與時間</span><strong>${escapeHtml(formatDate(course))}</strong></div>
-          <div><span>名額</span><strong>${escapeHtml(course.capacity || "名額未定")} 位</strong></div>
-          <div><span>講師</span><strong>${escapeHtml(course.teacherName || "涵捺 Hana")}</strong></div>
+          <div class="event-card__meta-item event-card__meta-date"><span>日期與時間</span><strong>${escapeHtml(formatDate(course))}</strong></div>
+          <div class="event-card__meta-item event-card__meta-capacity"><span>名額</span><strong>${escapeHtml(course.capacity || "名額未定")} 位</strong></div>
+          <div class="event-card__meta-item event-card__meta-teacher"><span>講師</span><strong>${escapeHtml(course.teacherName || "涵捺 Hana")}</strong></div>
         </div>
         <a class="event-card__button" href="${course.type === "offline" ? "#course-detail" : "#online-course-detail"}" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
       </div>
@@ -942,20 +970,22 @@ const renderExperiences = () => {
 const renderCourseLists = () => {
   const offline = publicCourses("offline");
   const online = publicCourses("online");
+  const visibleOffline = pagedCourses("offline", offline);
+  const visibleOnline = pagedCourses("online", online);
 
   if (offlineCourseList) {
     offlineCourseList.innerHTML = offline.length
-      ? offline.map(courseCard).join("")
+      ? `${visibleOffline.map(courseCard).join("")}${coursePagination("offline", offline.length)}`
       : `<div class="empty-state course-empty">目前尚未上架實體課程。</div>`;
   }
 
   if (onlineCourseList) {
     onlineCourseList.innerHTML = online.length
-      ? online
+      ? `${visibleOnline
           .map(
             (course, index) => `
               <article>
-                <span>${String(index + 1).padStart(2, "0")}</span>
+                <span>${String((coursePageState.online || 0) * COURSE_PAGE_SIZE + index + 1).padStart(2, "0")}</span>
                 <div>
                   <h3>${escapeHtml(course.title)}</h3>
                   <p>${escapeHtml(course.description)}</p>
@@ -964,7 +994,7 @@ const renderCourseLists = () => {
               </article>
             `,
           )
-          .join("")
+          .join("")}${coursePagination("online", online.length)}`
       : `<div class="empty-state course-empty">目前尚未上架線上課程。</div>`;
   }
 };
@@ -1189,6 +1219,19 @@ const routeContent = () => {
 };
 
 document.addEventListener("click", (event) => {
+  const pageButton = event.target.closest("[data-course-page]");
+  if (pageButton) {
+    event.preventDefault();
+    const type = pageButton.dataset.coursePage;
+    const direction = Number(pageButton.dataset.pageDirection || 0);
+    if (type in coursePageState && direction) {
+      coursePageState[type] = Math.max(0, (coursePageState[type] || 0) + direction);
+      renderCourseLists();
+      document.querySelector(type === "offline" ? "#offline" : "#online")?.scrollIntoView({ block: "start" });
+    }
+    return;
+  }
+
   const openButton = event.target.closest("[data-open-course]");
   if (openButton) setSelectedCourse(openButton.dataset.openCourse);
   const openContentButton = event.target.closest("[data-open-content]");
