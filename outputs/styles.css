@@ -263,6 +263,12 @@ h3 {
   box-shadow: 0 14px 32px rgba(94, 37, 49, 0.2);
 }
 
+.button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .registration-form .button.primary,
 .course-settings-form .button.primary,
 .settings-login .button.primary {
