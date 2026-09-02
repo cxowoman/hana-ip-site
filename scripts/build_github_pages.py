@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import base64
+import html
+import hashlib
 import shutil
 import os
 import json
@@ -13,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 DOCS = ROOT / "docs"
 CUSTOM_DOMAIN = os.environ.get("HANA_GITHUB_PAGES_DOMAIN", "hana31923.com.tw").strip()
+PUBLIC_ORIGIN = f"https://{CUSTOM_DOMAIN}" if CUSTOM_DOMAIN else ""
+SOCIAL_IMAGE_BASENAME = "social-preview-home"
 
 PUBLIC_EXCLUDES = {
     "EMAIL_SETUP.md",
@@ -25,18 +30,109 @@ PUBLIC_EXCLUDES = {
 }
 
 
-def published_data_version() -> str:
+def clean_text(value: object, max_length: int | None = None) -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if max_length and len(text) > max_length:
+        return text[: max_length - 3].rstrip() + "..."
+    return text
+
+
+def published_data() -> dict:
     try:
         data = json.loads((OUTPUTS / "published-data.json").read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError):
-        return date.today().isoformat()
+        return {}
+
+
+def published_data_version() -> str:
+    data = published_data()
     version = str(data.get("version") or date.today().isoformat())
     return re.sub(r"[^0-9A-Za-z._-]+", "-", version).strip("-") or date.today().isoformat()
 
 
+def absolute_url(value: str) -> str:
+    if value.startswith(("http://", "https://")):
+        return value
+    if not PUBLIC_ORIGIN:
+        return value
+    if value.startswith("./"):
+        value = value[1:]
+    if value.startswith("/"):
+        return f"{PUBLIC_ORIGIN}{value}"
+    return f"{PUBLIC_ORIGIN}/{value}"
+
+
+def social_image_from_data_url(image: str, version: str) -> str | None:
+    match = re.match(r"^data:image/([a-zA-Z0-9.+-]+);base64,(.+)$", image, re.S)
+    if not match:
+        return None
+    image_type, payload = match.groups()
+    extension = {"jpeg": "jpg", "pjpeg": "jpg", "svg+xml": "svg"}.get(image_type.lower(), image_type.lower())
+    if extension not in {"jpg", "jpeg", "png", "webp"}:
+        return None
+    try:
+        image_bytes = base64.b64decode(payload, validate=True)
+    except Exception:
+        return None
+    if not image_bytes:
+        return None
+    target = DOCS / "assets" / f"{SOCIAL_IMAGE_BASENAME}.{extension}"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(image_bytes)
+    digest = hashlib.sha256(image_bytes).hexdigest()[:12]
+    cache_token = re.sub(r"[^0-9A-Za-z._-]+", "-", version).strip("-") or digest
+    return absolute_url(f"/assets/{target.name}?v={cache_token}-{digest}")
+
+
+def social_preview_values() -> dict[str, str]:
+    data = published_data()
+    content = data.get("content") if isinstance(data.get("content"), dict) else {}
+    hero_title = clean_text(content.get("hero.title")) or "涵捺 Hana｜電商創業・短影音流量變現・IG掛車陪跑"
+    hero_body = clean_text(content.get("hero.body"), 180) or (
+        "涵捺 Hana 協助個人品牌、創業者與中小企業，把 AI、內容、社群與商品設計串成可追蹤、可優化、可複製的收入成長系統。"
+    )
+    version = str(data.get("version") or date.today().isoformat())
+    hero_image = clean_text(content.get("hero.image")) or "./assets/home-banner-hana.png"
+    image_url = social_image_from_data_url(hero_image, version)
+    if not image_url:
+        image_url = absolute_url(hero_image)
+    title = hero_title if "涵捺" in hero_title or "Hana" in hero_title else f"涵捺 Hana｜{hero_title}"
+    return {
+        "title": title,
+        "description": hero_body,
+        "image": image_url,
+        "image_alt": clean_text(hero_title, 90) or "Hana Banner",
+    }
+
+
+def replace_title(html_text: str, title: str) -> str:
+    escaped = html.escape(title, quote=False)
+    return re.sub(r"<title>.*?</title>", f"<title>{escaped}</title>", html_text, count=1, flags=re.S)
+
+
+def replace_meta_content(html_text: str, attr: str, name: str, content: str) -> str:
+    escaped = html.escape(content, quote=True)
+    pattern = re.compile(
+        rf'(<meta\b(?=[^>]*\b{re.escape(attr)}="{re.escape(name)}")(?=[^>]*\bcontent=")[^>]*\bcontent=")[^"]*("[^>]*>)',
+        re.S,
+    )
+    return pattern.sub(lambda match: f"{match.group(1)}{escaped}{match.group(2)}", html_text, count=1)
+
+
 def public_index_html(html: str) -> str:
+    preview = social_preview_values()
     html = html.replace('        <a href="./admin.html">網站後台</a>\n', "")
     html = html.replace('    <script src="./config.js"></script>\n', "")
+    html = replace_title(html, preview["title"])
+    html = replace_meta_content(html, "name", "description", preview["description"])
+    html = replace_meta_content(html, "property", "og:title", preview["title"])
+    html = replace_meta_content(html, "property", "og:description", preview["description"])
+    html = replace_meta_content(html, "property", "og:image", preview["image"])
+    html = replace_meta_content(html, "property", "og:image:alt", preview["image_alt"])
+    html = replace_meta_content(html, "name", "twitter:title", preview["title"])
+    html = replace_meta_content(html, "name", "twitter:description", preview["description"])
+    html = replace_meta_content(html, "name", "twitter:image", preview["image"])
     html = re.sub(
         r'<script src="\./published-data\.js(?:\?v=[^"]*)?"></script>',
         f'<script src="./published-data.js?v={published_data_version()}"></script>',
