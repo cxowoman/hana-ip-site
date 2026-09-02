@@ -789,8 +789,25 @@ const formatDate = (course) => {
   return `${formatted} ${course.startTime || ""}${course.endTime ? `–${course.endTime}` : ""}`;
 };
 
+const courseDetailRoute = (course) => `${course.type === "offline" ? "#course-detail" : "#online-course-detail"}/${encodeURIComponent(course.id)}`;
+
+const currentRoute = () => {
+  const [hash, courseId = ""] = window.location.hash.replace("#", "").split("/");
+  return {
+    hash,
+    courseId: courseId ? decodeURIComponent(courseId) : "",
+  };
+};
+
+const selectedCourseIdFromRoute = (type) => {
+  const { hash, courseId } = currentRoute();
+  if (type === "offline" && hash === "course-detail") return courseId;
+  if (type === "online" && hash === "online-course-detail") return courseId;
+  return "";
+};
+
 const setSelectedCourse = (id) => {
-  localStorage.setItem(SELECTED_COURSE_KEY, id);
+  if (id) localStorage.setItem(SELECTED_COURSE_KEY, id);
 };
 
 const setSelectedContentPost = (id) => {
@@ -799,7 +816,7 @@ const setSelectedContentPost = (id) => {
 
 const selectedCourse = (type) => {
   const courses = publicCourses(type);
-  const selectedId = localStorage.getItem(SELECTED_COURSE_KEY);
+  const selectedId = selectedCourseIdFromRoute(type) || localStorage.getItem(SELECTED_COURSE_KEY);
   return courses.find((course) => course.id === selectedId) || courses[0];
 };
 
@@ -827,7 +844,7 @@ const courseCard = (course) => {
           <div class="event-card__meta-item event-card__meta-capacity"><span>名額</span><strong>${escapeHtml(course.capacity || "名額未定")} 位</strong></div>
           <div class="event-card__meta-item event-card__meta-teacher"><span>講師</span><strong>${escapeHtml(course.teacherName || "涵捺 Hana")}</strong></div>
         </div>
-        <a class="event-card__button" href="${course.type === "offline" ? "#course-detail" : "#online-course-detail"}" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
+        <a class="event-card__button" href="${escapeHtml(courseDetailRoute(course))}" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
       </div>
     </article>
   `;
@@ -989,7 +1006,7 @@ const renderCourseLists = () => {
                 <div>
                   <h3>${escapeHtml(course.title)}</h3>
                   <p>${escapeHtml(course.description)}</p>
-                  <a class="lecture-link" href="#online-course-detail" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
+                  <a class="lecture-link" href="${escapeHtml(courseDetailRoute(course))}" data-open-course="${escapeHtml(course.id)}">了解完整資訊</a>
                 </div>
               </article>
             `,
@@ -1199,7 +1216,7 @@ const renderCourseDetail = (type) => {
 };
 
 const routeContent = () => {
-  const hash = window.location.hash.replace("#", "");
+  const { hash, courseId } = currentRoute();
   const pageSelector = pageRoutes[hash];
 
   pageSections.forEach((section) => section.classList.remove("is-active-page"));
@@ -1207,6 +1224,7 @@ const routeContent = () => {
   if (pageSelector) {
     body.classList.add("page-view");
     document.querySelector(pageSelector)?.classList.add("is-active-page");
+    if (courseId && (hash === "course-detail" || hash === "online-course-detail")) setSelectedCourse(courseId);
     if (hash === "course-detail") renderCourseDetail("offline");
     if (hash === "online-course-detail") renderCourseDetail("online");
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
