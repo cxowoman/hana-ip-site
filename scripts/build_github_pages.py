@@ -51,6 +51,13 @@ def published_data_version() -> str:
     return re.sub(r"[^0-9A-Za-z._-]+", "-", version).strip("-") or date.today().isoformat()
 
 
+def file_version(relative_path: str) -> str:
+    try:
+        return hashlib.sha256((OUTPUTS / relative_path).read_bytes()).hexdigest()[:12]
+    except OSError:
+        return date.today().isoformat()
+
+
 def absolute_url(value: str) -> str:
     if value.startswith(("http://", "https://")):
         return value
@@ -120,6 +127,13 @@ def replace_meta_content(html_text: str, attr: str, name: str, content: str) -> 
     return pattern.sub(lambda match: f"{match.group(1)}{escaped}{match.group(2)}", html_text, count=1)
 
 
+def replace_asset_version(html_text: str, relative_path: str, version: str) -> str:
+    escaped_path = re.escape(relative_path)
+    escaped_version = html.escape(version, quote=True)
+    pattern = re.compile(rf'((?:href|src)="\./{escaped_path})(?:\?v=[^"]*)?(")')
+    return pattern.sub(lambda match: f"{match.group(1)}?v={escaped_version}{match.group(2)}", html_text)
+
+
 def public_index_html(html: str) -> str:
     preview = social_preview_values()
     html = html.replace('        <a href="./admin.html">網站後台</a>\n', "")
@@ -138,6 +152,10 @@ def public_index_html(html: str) -> str:
         f'<script src="./published-data.js?v={published_data_version()}"></script>',
         html,
     )
+    html = replace_asset_version(html, "styles.css", file_version("styles.css"))
+    html = replace_asset_version(html, "recovered-data.js", file_version("recovered-data.js"))
+    html = replace_asset_version(html, "registration-public-config.js", file_version("registration-public-config.js"))
+    html = replace_asset_version(html, "script.js", file_version("script.js"))
     return html
 
 

@@ -1020,7 +1020,7 @@ const registrationForm = (course) => {
   const datalistId = `meetupAreaSuggestions-${String(course?.id || "course").replace(/[^a-z0-9_-]/gi, "")}`;
   const canSubmit = registrationCloudReady();
   return `
-    <form class="registration-form" data-registration-form>
+    <form class="registration-form" data-registration-form novalidate>
       <input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
       <div class="registration-heading">
         <p class="eyebrow">Registration</p>
@@ -1039,7 +1039,7 @@ const registrationForm = (course) => {
       </div>
       <div class="form-footer">
         <p class="registration-note">${canSubmit ? "送出後會收到報名成功信，並於 48 小時後、課程前三天及課程前一天收到提醒。" : "報名資料庫尚未完成連線，請先聯繫 Hana 或稍後再試。"}</p>
-        <button class="button primary" type="submit" ${canSubmit ? "" : "disabled"}>確認報名</button>
+        <button class="button primary" type="submit" ${canSubmit ? "" : 'aria-disabled="true"'}>確認報名</button>
       </div>
       <p class="form-status" role="status"></p>
     </form>
@@ -1077,8 +1077,12 @@ const registrationSuccessModal = (area, group) => `
   </div>
 `;
 
-const showRegistrationSuccessModal = (area, group) => {
+const closeRegistrationModal = () => {
   document.querySelector("[data-registration-modal]")?.remove();
+};
+
+const showRegistrationSuccessModal = (area, group) => {
+  closeRegistrationModal();
   document.body.insertAdjacentHTML("beforeend", registrationSuccessModal(area, group));
   document.querySelector("[data-registration-modal] .registration-modal__close")?.focus();
 };
@@ -1146,16 +1150,44 @@ const registrationFieldLabels = {
   phone: "手機",
 };
 
+const registrationFormErrors = (form) => {
+  const data = new FormData(form);
+  const missing = Object.entries(registrationFieldLabels)
+    .filter(([name]) => !String(data.get(name) || "").trim())
+    .map(([, label]) => label);
+  const errors = missing.length ? [`請先填寫：${missing.join("、")}。`] : [];
+  const email = String(data.get("email") || "").trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Email 格式看起來不正確，請再確認一次。");
+  return errors;
+};
+
+const focusFirstRegistrationError = (form) => {
+  const data = new FormData(form);
+  const missingName = Object.keys(registrationFieldLabels).find((name) => !String(data.get(name) || "").trim());
+  if (missingName) {
+    form.querySelector(`[name="${missingName}"]`)?.focus();
+    return;
+  }
+  const email = String(data.get("email") || "").trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) form.querySelector('[name="email"]')?.focus();
+};
+
 const showRegistrationValidation = (form) => {
   const status = form.querySelector(".form-status");
-  const missing = Object.entries(registrationFieldLabels)
-    .filter(([name]) => !String(new FormData(form).get(name) || "").trim())
-    .map(([, label]) => label);
+  const errors = registrationFormErrors(form);
   if (status) {
-    status.textContent = missing.length ? `請先填寫：${missing.join("、")}。` : "請確認欄位格式是否正確。";
+    status.textContent = errors.length ? errors.join(" ") : "請確認欄位格式是否正確。";
+    status.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
-  form.querySelector(":invalid")?.focus();
-  form.reportValidity();
+  focusFirstRegistrationError(form);
+};
+
+const setRegistrationSubmitting = (form, isSubmitting) => {
+  const submitButton = form.querySelector('button[type="submit"]');
+  if (!submitButton) return;
+  submitButton.disabled = isSubmitting;
+  submitButton.classList.toggle("is-submitting", isSubmitting);
+  submitButton.textContent = isSubmitting ? "送出中..." : "確認報名";
 };
 
 const updateMeetupPreview = (select) => {
@@ -1216,6 +1248,7 @@ const renderCourseDetail = (type) => {
 };
 
 const routeContent = () => {
+  closeRegistrationModal();
   const { hash, courseId } = currentRoute();
   const pageSelector = pageRoutes[hash];
 
@@ -1280,26 +1313,32 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("click", (event) => {
   if (!event.target.closest("[data-close-registration-modal]")) return;
-  document.querySelector("[data-registration-modal]")?.remove();
+  closeRegistrationModal();
 });
 
 document.addEventListener("click", (event) => {
   const submitButton = event.target.closest("[data-registration-form] button[type='submit']");
   if (!submitButton) return;
   const form = submitButton.closest("[data-registration-form]");
+  if (!form) return;
+  const status = form.querySelector(".form-status");
+  if (submitButton.disabled) {
+    event.preventDefault();
+    if (status) status.textContent = "報名資料正在送出中，請稍等幾秒。";
+    return;
+  }
   if (!registrationCloudReady()) {
     event.preventDefault();
-    const status = form?.querySelector(".form-status");
     if (status) status.textContent = "報名資料庫尚未完成連線，這次尚未送出。請先完成 Google Sheet Apps Script Web App URL 設定。";
     return;
   }
-  if (!form || form.checkValidity()) return;
+  if (!registrationFormErrors(form).length) return;
   event.preventDefault();
   showRegistrationValidation(form);
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") document.querySelector("[data-registration-modal]")?.remove();
+  if (event.key === "Escape") closeRegistrationModal();
 });
 
 document.addEventListener("submit", async (event) => {
@@ -1311,7 +1350,7 @@ document.addEventListener("submit", async (event) => {
     if (status) status.textContent = "報名資料庫尚未完成連線，這次尚未送出。請先完成 Google Sheet Apps Script Web App URL 設定。";
     return;
   }
-  if (!form.checkValidity()) {
+  if (registrationFormErrors(form).length) {
     showRegistrationValidation(form);
     return;
   }
@@ -1320,10 +1359,9 @@ document.addEventListener("submit", async (event) => {
   const meetupArea = data.get("meetupArea");
   const meetupGroup = getMeetupGroupForArea(meetupArea);
   const registration = registrationPayload(currentRegistrationCourse(form), data, meetupArea, meetupGroup);
-  const submitButton = form.querySelector('button[type="submit"]');
   const status = form.querySelector(".form-status");
 
-  if (submitButton) submitButton.disabled = true;
+  setRegistrationSubmitting(form, true);
   if (status) status.textContent = "正在送出報名資料...";
 
   let cloudResult = { ok: false, skipped: true };
@@ -1352,7 +1390,7 @@ document.addEventListener("submit", async (event) => {
     if (status) status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
     showRegistrationSuccessModal(meetupArea, null);
   }
-  if (submitButton) submitButton.disabled = false;
+  setRegistrationSubmitting(form, false);
 });
 
 const renderAll = () => {

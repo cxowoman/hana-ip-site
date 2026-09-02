@@ -280,6 +280,13 @@ h3 {
   font-weight: 800;
 }
 
+.registration-form .button.primary:disabled,
+.registration-form .button.primary[aria-disabled="true"],
+.registration-form .button.primary.is-submitting {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .button.ghost {
   background: rgba(255, 250, 245, 0.7);
   color: var(--wine);
