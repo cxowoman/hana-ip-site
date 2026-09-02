@@ -1020,7 +1020,7 @@ const registrationForm = (course) => {
   const datalistId = `meetupAreaSuggestions-${String(course?.id || "course").replace(/[^a-z0-9_-]/gi, "")}`;
   const canSubmit = registrationCloudReady();
   return `
-    <form class="registration-form" data-registration-form novalidate>
+    <form class="registration-form" data-registration-form novalidate onsubmit="return window.handleRegistrationSubmit(event)">
       <input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
       <div class="registration-heading">
         <p class="eyebrow">Registration</p>
@@ -1036,11 +1036,11 @@ const registrationForm = (course) => {
         <label>手機<input name="phone" autocomplete="tel" required /></label>
         <label class="wide">備註<textarea name="note" rows="4" placeholder="飲食、同行人、其他需求"></textarea></label>
       </div>
+      <p class="form-status" role="status" aria-live="polite"></p>
       <div class="form-footer">
         <p class="registration-note">${canSubmit ? "送出後會收到報名成功信，並於 48 小時後、課程前三天及課程前一天收到提醒。" : "報名資料庫尚未完成連線，請先聯繫 Hana 或稍後再試。"}</p>
-        <button class="button primary" type="submit" ${canSubmit ? "" : 'aria-disabled="true"'}>確認報名</button>
+        <button class="button primary" type="submit" onclick="return window.handleRegistrationButtonClick(event)" ${canSubmit ? "" : 'aria-disabled="true"'}>確認報名</button>
       </div>
-      <p class="form-status" role="status"></p>
     </form>
   `;
 };
@@ -1160,25 +1160,30 @@ const registrationFormErrors = (form) => {
   return errors;
 };
 
-const focusFirstRegistrationError = (form) => {
+const syncRegistrationFieldStates = (form) => {
   const data = new FormData(form);
-  const missingName = Object.keys(registrationFieldLabels).find((name) => !String(data.get(name) || "").trim());
-  if (missingName) {
-    form.querySelector(`[name="${missingName}"]`)?.focus();
-    return;
-  }
   const email = String(data.get("email") || "").trim();
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) form.querySelector('[name="email"]')?.focus();
+  Object.keys(registrationFieldLabels).forEach((name) => {
+    const field = form.querySelector(`[name="${name}"]`);
+    const isInvalid = !String(data.get(name) || "").trim() || (name === "email" && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    field?.classList.toggle("is-invalid", isInvalid);
+  });
+};
+
+const clearRegistrationFieldStates = (form) => {
+  Object.keys(registrationFieldLabels).forEach((name) => {
+    form.querySelector(`[name="${name}"]`)?.classList.remove("is-invalid");
+  });
 };
 
 const showRegistrationValidation = (form) => {
   const status = form.querySelector(".form-status");
   const errors = registrationFormErrors(form);
+  syncRegistrationFieldStates(form);
   if (status) {
     status.textContent = errors.length ? errors.join(" ") : "請確認欄位格式是否正確。";
-    status.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    status.scrollIntoView({ block: "center", behavior: "smooth" });
   }
-  focusFirstRegistrationError(form);
 };
 
 const setRegistrationSubmitting = (form, isSubmitting) => {
@@ -1286,56 +1291,81 @@ document.addEventListener("click", (event) => {
   if (openContentButton) setSelectedContentPost(openContentButton.dataset.openContent);
 });
 
+document.addEventListener("input", (event) => {
+  const form = event.target.closest("[data-registration-form]");
+  if (!form) return;
+  syncRegistrationFieldStates(form);
+  const status = form.querySelector(".form-status");
+  if (status && !registrationFormErrors(form).length) status.textContent = "";
+});
+
 document.addEventListener("click", (event) => {
   if (!event.target.closest("[data-close-registration-modal]")) return;
   closeRegistrationModal();
 });
 
-document.addEventListener("click", (event) => {
+const handleRegistrationButtonClick = (event) => {
+  if (event.defaultPrevented) return false;
   const submitButton = event.target.closest("[data-registration-form] button[type='submit']");
-  if (!submitButton) return;
+  if (!submitButton) return true;
   const form = submitButton.closest("[data-registration-form]");
-  if (!form) return;
+  if (!form) return true;
   const status = form.querySelector(".form-status");
   if (submitButton.disabled) {
     event.preventDefault();
     if (status) status.textContent = "報名資料正在送出中，請稍等幾秒。";
-    return;
+    return false;
   }
   if (!registrationCloudReady()) {
     event.preventDefault();
     if (status) status.textContent = "報名資料庫尚未完成連線，這次尚未送出。請先完成 Google Sheet Apps Script Web App URL 設定。";
-    return;
+    status?.scrollIntoView({ block: "center", behavior: "smooth" });
+    return false;
   }
-  if (!registrationFormErrors(form).length) return;
+  if (!registrationFormErrors(form).length) return true;
   event.preventDefault();
   showRegistrationValidation(form);
+  return false;
+};
+
+window.handleRegistrationButtonClick = handleRegistrationButtonClick;
+
+document.addEventListener("click", (event) => {
+  handleRegistrationButtonClick(event);
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeRegistrationModal();
 });
 
-document.addEventListener("submit", async (event) => {
+const handleRegistrationSubmit = async (event) => {
+  if (event.defaultPrevented) return false;
   const form = event.target.closest("[data-registration-form]");
-  if (!form) return;
+  if (!form) return true;
   event.preventDefault();
+  if (form.dataset.registrationSubmitting === "true") {
+    const status = form.querySelector(".form-status");
+    if (status) status.textContent = "報名資料正在送出中，請稍等幾秒。";
+    return false;
+  }
   if (!registrationCloudReady()) {
     const status = form.querySelector(".form-status");
     if (status) status.textContent = "報名資料庫尚未完成連線，這次尚未送出。請先完成 Google Sheet Apps Script Web App URL 設定。";
-    return;
+    status?.scrollIntoView({ block: "center", behavior: "smooth" });
+    return false;
   }
   if (registrationFormErrors(form).length) {
     showRegistrationValidation(form);
-    return;
+    return false;
   }
   const data = new FormData(form);
-  if (String(data.get("website") || "").trim()) return;
+  if (String(data.get("website") || "").trim()) return false;
   const meetupArea = data.get("meetupArea");
   const meetupGroup = getMeetupGroupForArea(meetupArea);
   const registration = registrationPayload(currentRegistrationCourse(form), data, meetupArea, meetupGroup);
   const status = form.querySelector(".form-status");
 
+  form.dataset.registrationSubmitting = "true";
   setRegistrationSubmitting(form, true);
   if (status) status.textContent = "正在送出報名資料...";
 
@@ -1346,21 +1376,33 @@ document.addEventListener("submit", async (event) => {
     cloudResult = { ok: false, skipped: false, error };
   }
 
-  writeLocalRegistration({
-    ...registration,
-    cloudStatus: cloudResult.ok ? "synced" : cloudResult.skipped ? "local-only" : "failed",
-  });
+  try {
+    writeLocalRegistration({
+      ...registration,
+      cloudStatus: cloudResult.ok ? "synced" : cloudResult.skipped ? "local-only" : "failed",
+    });
 
-  form.reset();
+    form.reset();
+    clearRegistrationFieldStates(form);
 
-  if (meetupGroup) {
-    if (status) status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
-    showRegistrationSuccessModal(meetupArea, meetupGroup);
-  } else {
-    if (status) status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
-    showRegistrationSuccessModal(meetupArea, null);
+    if (meetupGroup) {
+      if (status) status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");
+      showRegistrationSuccessModal(meetupArea, meetupGroup);
+    } else {
+      if (status) status.textContent = "報名資料已送出，請再確認所在區域後加入對應社群。";
+      showRegistrationSuccessModal(meetupArea, null);
+    }
+  } finally {
+    delete form.dataset.registrationSubmitting;
+    setRegistrationSubmitting(form, false);
   }
-  setRegistrationSubmitting(form, false);
+  return false;
+};
+
+window.handleRegistrationSubmit = handleRegistrationSubmit;
+
+document.addEventListener("submit", (event) => {
+  handleRegistrationSubmit(event);
 });
 
 const renderAll = () => {

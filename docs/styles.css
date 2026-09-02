@@ -255,6 +255,7 @@ h3 {
   border-radius: 999px;
   padding: 12px 22px;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .button.primary {
@@ -976,6 +977,12 @@ dd {
   outline: 0;
 }
 
+.form-grid input.is-invalid,
+.form-grid textarea.is-invalid {
+  border-color: #9f3c3c;
+  box-shadow: 0 0 0 3px rgba(159, 60, 60, 0.1);
+}
+
 .form-grid textarea {
   resize: vertical;
 }
@@ -1044,6 +1051,10 @@ dd {
 .form-status {
   color: #003e3e;
   font-weight: 800;
+}
+
+.form-status:empty {
+  display: none;
 }
 
 .registration-modal {
