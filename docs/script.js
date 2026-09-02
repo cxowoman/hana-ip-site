@@ -1034,7 +1034,6 @@ const registrationForm = (course) => {
         <label>居住區域<input name="meetupArea" data-meetup-area list="${escapeHtml(datalistId)}" placeholder="例：台中市、台北市" required /></label>
         <label>Email<input name="email" type="email" autocomplete="email" required /></label>
         <label>手機<input name="phone" autocomplete="tel" required /></label>
-        <div class="meetup-link-preview wide" data-meetup-preview hidden></div>
         <label class="wide">備註<textarea name="note" rows="4" placeholder="飲食、同行人、其他需求"></textarea></label>
       </div>
       <div class="form-footer">
@@ -1190,20 +1189,6 @@ const setRegistrationSubmitting = (form, isSubmitting) => {
   submitButton.textContent = isSubmitting ? "送出中..." : "確認報名";
 };
 
-const updateMeetupPreview = (select) => {
-  const form = select.closest("[data-registration-form]");
-  const preview = form?.querySelector("[data-meetup-preview]");
-  if (!preview) return;
-  const group = getMeetupGroupForArea(select.value);
-  if (!group) {
-    preview.hidden = true;
-    preview.innerHTML = "";
-    return;
-  }
-  preview.hidden = false;
-  preview.innerHTML = meetupGroupCard(select.value, group);
-};
-
 const renderCourseDetail = (type) => {
   const course = selectedCourse(type);
   const target = type === "offline" ? courseDetail : onlineCourseDetail;
@@ -1301,16 +1286,6 @@ document.addEventListener("click", (event) => {
   if (openContentButton) setSelectedContentPost(openContentButton.dataset.openContent);
 });
 
-document.addEventListener("change", (event) => {
-  const areaSelect = event.target.closest("[data-meetup-area]");
-  if (areaSelect) updateMeetupPreview(areaSelect);
-});
-
-document.addEventListener("input", (event) => {
-  const areaInput = event.target.closest("[data-meetup-area]");
-  if (areaInput) updateMeetupPreview(areaInput);
-});
-
 document.addEventListener("click", (event) => {
   if (!event.target.closest("[data-close-registration-modal]")) return;
   closeRegistrationModal();
@@ -1377,11 +1352,6 @@ document.addEventListener("submit", async (event) => {
   });
 
   form.reset();
-  const preview = form.querySelector("[data-meetup-preview]");
-  if (preview) {
-    preview.hidden = true;
-    preview.innerHTML = "";
-  }
 
   if (meetupGroup) {
     if (status) status.innerHTML = meetupGroupCard(meetupArea, meetupGroup, "報名完成，請加入");

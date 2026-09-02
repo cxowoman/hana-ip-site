@@ -985,10 +985,6 @@ dd {
   margin-top: 22px;
 }
 
-.meetup-link-preview {
-  margin-top: -4px;
-}
-
 .meetup-link-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
