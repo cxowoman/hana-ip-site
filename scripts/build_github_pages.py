@@ -18,6 +18,9 @@ DOCS = ROOT / "docs"
 CUSTOM_DOMAIN = os.environ.get("HANA_GITHUB_PAGES_DOMAIN", "hana31923.com.tw").strip()
 PUBLIC_ORIGIN = f"https://{CUSTOM_DOMAIN}" if CUSTOM_DOMAIN else ""
 SOCIAL_IMAGE_BASENAME = "social-preview-home"
+SOCIAL_IMAGE_WIDTH = 1200
+SOCIAL_IMAGE_HEIGHT = 630
+SOCIAL_IMAGE_BACKGROUND = (252, 246, 241)
 
 PUBLIC_EXCLUDES = {
     "EMAIL_SETUP.md",
@@ -70,6 +73,34 @@ def absolute_url(value: str) -> str:
     return f"{PUBLIC_ORIGIN}/{value}"
 
 
+def social_image_from_bytes(image_bytes: bytes, version: str) -> str | None:
+    if not image_bytes:
+        return None
+    try:
+        from PIL import Image, ImageOps
+        from io import BytesIO
+
+        source = Image.open(BytesIO(image_bytes))
+        source = ImageOps.exif_transpose(source).convert("RGB")
+        source.thumbnail((SOCIAL_IMAGE_WIDTH, SOCIAL_IMAGE_HEIGHT), Image.Resampling.LANCZOS)
+        canvas = Image.new("RGB", (SOCIAL_IMAGE_WIDTH, SOCIAL_IMAGE_HEIGHT), SOCIAL_IMAGE_BACKGROUND)
+        x = (SOCIAL_IMAGE_WIDTH - source.width) // 2
+        y = (SOCIAL_IMAGE_HEIGHT - source.height) // 2
+        canvas.paste(source, (x, y))
+        output = BytesIO()
+        canvas.save(output, format="JPEG", quality=92, optimize=True)
+        image_bytes = output.getvalue()
+    except Exception:
+        pass
+
+    target = DOCS / "assets" / f"{SOCIAL_IMAGE_BASENAME}.jpg"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(image_bytes)
+    digest = hashlib.sha256(image_bytes).hexdigest()[:12]
+    cache_token = re.sub(r"[^0-9A-Za-z._-]+", "-", version).strip("-") or digest
+    return absolute_url(f"/assets/{target.name}?v={cache_token}-{digest}")
+
+
 def social_image_from_data_url(image: str, version: str) -> str | None:
     match = re.match(r"^data:image/([a-zA-Z0-9.+-]+);base64,(.+)$", image, re.S)
     if not match:
@@ -82,14 +113,16 @@ def social_image_from_data_url(image: str, version: str) -> str | None:
         image_bytes = base64.b64decode(payload, validate=True)
     except Exception:
         return None
-    if not image_bytes:
+    return social_image_from_bytes(image_bytes, version)
+
+
+def social_image_from_local_image(image: str, version: str) -> str | None:
+    value = image[2:] if image.startswith("./") else image.lstrip("/")
+    source = OUTPUTS / value
+    try:
+        return social_image_from_bytes(source.read_bytes(), version)
+    except OSError:
         return None
-    target = DOCS / "assets" / f"{SOCIAL_IMAGE_BASENAME}.{extension}"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(image_bytes)
-    digest = hashlib.sha256(image_bytes).hexdigest()[:12]
-    cache_token = re.sub(r"[^0-9A-Za-z._-]+", "-", version).strip("-") or digest
-    return absolute_url(f"/assets/{target.name}?v={cache_token}-{digest}")
 
 
 def social_preview_values() -> dict[str, str]:
@@ -103,6 +136,8 @@ def social_preview_values() -> dict[str, str]:
     hero_image = clean_text(content.get("hero.image")) or "./assets/home-banner-hana.png"
     image_url = social_image_from_data_url(hero_image, version)
     if not image_url:
+        image_url = social_image_from_local_image(hero_image, version)
+    if not image_url:
         image_url = absolute_url(hero_image)
     title = hero_title if "涵捺" in hero_title or "Hana" in hero_title else f"涵捺 Hana｜{hero_title}"
     return {
@@ -110,6 +145,9 @@ def social_preview_values() -> dict[str, str]:
         "description": hero_body,
         "image": image_url,
         "image_alt": clean_text(hero_title, 90) or "Hana Banner",
+        "image_width": str(SOCIAL_IMAGE_WIDTH),
+        "image_height": str(SOCIAL_IMAGE_HEIGHT),
+        "image_type": "image/jpeg",
     }
 
 
@@ -125,6 +163,15 @@ def replace_meta_content(html_text: str, attr: str, name: str, content: str) -> 
         re.S,
     )
     return pattern.sub(lambda match: f"{match.group(1)}{escaped}{match.group(2)}", html_text, count=1)
+
+
+def ensure_meta_content(html_text: str, attr: str, name: str, content: str, after_name: str) -> str:
+    if re.search(rf'<meta\b(?=[^>]*\b{re.escape(attr)}="{re.escape(name)}")', html_text):
+        return replace_meta_content(html_text, attr, name, content)
+    escaped = html.escape(content, quote=True)
+    line = f'    <meta {attr}="{name}" content="{escaped}" />\n'
+    pattern = re.compile(rf'(^\s*<meta\b(?=[^>]*\b{re.escape(attr)}="{re.escape(after_name)}")[^>]*>\n)', re.M)
+    return pattern.sub(lambda match: f"{match.group(1)}{line}", html_text, count=1)
 
 
 def replace_asset_version(html_text: str, relative_path: str, version: str) -> str:
@@ -143,6 +190,9 @@ def public_index_html(html: str) -> str:
     html = replace_meta_content(html, "property", "og:title", preview["title"])
     html = replace_meta_content(html, "property", "og:description", preview["description"])
     html = replace_meta_content(html, "property", "og:image", preview["image"])
+    html = ensure_meta_content(html, "property", "og:image:width", preview["image_width"], "og:image")
+    html = ensure_meta_content(html, "property", "og:image:height", preview["image_height"], "og:image:width")
+    html = ensure_meta_content(html, "property", "og:image:type", preview["image_type"], "og:image:height")
     html = replace_meta_content(html, "property", "og:image:alt", preview["image_alt"])
     html = replace_meta_content(html, "name", "twitter:title", preview["title"])
     html = replace_meta_content(html, "name", "twitter:description", preview["description"])
