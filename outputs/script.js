@@ -1225,8 +1225,20 @@ const routeContent = () => {
     body.classList.add("page-view");
     document.querySelector(pageSelector)?.classList.add("is-active-page");
     if (courseId && (hash === "course-detail" || hash === "online-course-detail")) setSelectedCourse(courseId);
-    if (hash === "course-detail") renderCourseDetail("offline");
-    if (hash === "online-course-detail") renderCourseDetail("online");
+    if (hash === "course-detail") {
+      if (!courseId) {
+        const course = selectedCourse("offline");
+        if (course) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${courseDetailRoute(course)}`);
+      }
+      renderCourseDetail("offline");
+    }
+    if (hash === "online-course-detail") {
+      if (!courseId) {
+        const course = selectedCourse("online");
+        if (course) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${courseDetailRoute(course)}`);
+      }
+      renderCourseDetail("online");
+    }
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
     return;
   }
