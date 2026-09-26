@@ -476,6 +476,7 @@ const seedContentPosts = [
 
 const pageRoutes = {
   about: "#about",
+  book: "#book",
   offline: "#offline",
   "course-detail": "#course-detail",
   online: "#online",
