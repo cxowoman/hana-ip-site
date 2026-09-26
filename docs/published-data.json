@@ -164,7 +164,7 @@
     {
       "id": "course-mtj1w0ii",
       "type": "offline",
-      "status": "published",
+      "status": "draft",
       "teacherName": "涵捺 Hana",
       "teacherEmail": "hana31923@gmail.com",
       "title": "Hana 生日Party 桌遊趴",
@@ -506,6 +506,6 @@
     "about.storyEyebrow": "About Me",
     "about.cta": "預約收入成長診斷"
   },
-  "version": "2026-09-26T15:13:25.896691+00:00",
-  "publishedAt": "2026-09-26T15:13:25.896691+00:00"
+  "version": "2026-09-26T15:13:32.050090+00:00",
+  "publishedAt": "2026-09-26T15:13:32.050090+00:00"
 }
