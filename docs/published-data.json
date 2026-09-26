@@ -107,7 +107,7 @@
     {
       "id": "course-mtiw2ax8",
       "type": "offline",
-      "status": "published",
+      "status": "draft",
       "teacherName": "Cindy",
       "teacherEmail": "",
       "title": "桃園短影音｜女生小聚",
@@ -506,6 +506,6 @@
     "about.storyEyebrow": "About Me",
     "about.cta": "預約收入成長診斷"
   },
-  "version": "2026-09-26T15:13:03.679001+00:00",
-  "publishedAt": "2026-09-26T15:13:03.679001+00:00"
+  "version": "2026-09-26T15:13:13.735654+00:00",
+  "publishedAt": "2026-09-26T15:13:13.735654+00:00"
 }
