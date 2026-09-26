@@ -2190,15 +2190,15 @@ dd {
 
 .book-chapter-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
   margin-top: 50px;
 }
 
 .book-chapter-grid article {
-  display: grid;
-  grid-template-columns: minmax(180px, 0.78fr) minmax(0, 1.22fr);
-  min-height: 270px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   border: 1px solid rgba(18, 63, 58, 0.2);
   background: #fffdf8;
   overflow: hidden;
@@ -2206,16 +2206,15 @@ dd {
 
 .book-chapter-grid article > img {
   width: 100%;
-  height: 100%;
-  min-height: 270px;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
 
 .book-chapter-grid article > div {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 30px;
+  flex: 1;
+  padding: 28px;
 }
 
 .book-chapter-grid h3 {
@@ -2416,6 +2415,10 @@ dd {
   }
 
   .book-store-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .book-chapter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
