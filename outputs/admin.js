@@ -529,7 +529,7 @@ const contentSections = [
       ["consult.title", "免費諮詢標題", "textarea", "先聊聊你的品牌現在卡在哪裡。"],
       ["consult.body", "免費諮詢內文", "textarea", "留下你的需求，我們會一起判斷最適合的下一步：課程、講座、陪跑，或先整理你的定位。"],
       ["consult.cta", "免費諮詢按鈕", "text", "預約免費諮詢"],
-      ["consult.link", "免費諮詢連結", "text", "mailto:hello@example.com?subject=我想預約涵捺免費諮詢"],
+      ["consult.link", "免費諮詢連結", "text", "https://lin.ee/vWLdVom"],
     ],
   },
   {
