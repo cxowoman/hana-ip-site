@@ -88,7 +88,7 @@
     {
       "id": "course-mthpwy2s",
       "type": "offline",
-      "status": "published",
+      "status": "draft",
       "teacherName": "Mina",
       "teacherEmail": "hana31923@gmail.com",
       "title": "台北短影音｜探店踩點",
@@ -506,6 +506,6 @@
     "about.storyEyebrow": "About Me",
     "about.cta": "預約收入成長診斷"
   },
-  "version": "2026-09-15T15:26:27.471961+00:00",
-  "publishedAt": "2026-09-15T15:26:27.471961+00:00"
+  "version": "2026-09-26T15:13:03.679001+00:00",
+  "publishedAt": "2026-09-26T15:13:03.679001+00:00"
 }
